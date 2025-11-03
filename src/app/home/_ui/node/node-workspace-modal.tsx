@@ -163,12 +163,15 @@ const AcademicNodeComponent = ({ data, selected }: { data: AcademicNodeData, sel
                 {/* Node Content */}
                 <div className="flex items-center gap-4">
                     {/* Icon Container */}
-                    <div className={cn(
-                        "size-12 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300",
-                        "bg-gradient-to-br from-emerald-500 to-green-600",
-                        "hover:from-emerald-400 hover:to-green-500",
-                        "ring-1 ring-emerald-100/50 dark:ring-emerald-900/50"
-                    )}>
+                    <div 
+                        className={cn(
+                            "size-12 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300",
+                            "ring-1 ring-black/10 dark:ring-white/10"
+                        )}
+                        style={{
+                            backgroundColor: data.color || "#10b981",
+                        }}
+                    >
                         <div className="text-white drop-shadow-sm">
                             {data.icon}
                         </div>
@@ -630,31 +633,87 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
     const [isLoadingNodes, setIsLoadingNodes] = useState(false)
     const { user: authUser } = useAuth()
 
-    // Dummy data for nodes (will be replaced with RTK Query later)
+    // Hardcoded node data with full details
     const [academicSpecialists, setAcademicSpecialists] = useState([
         {
-            id: "dsa-expert",
+            id: "node_dsa_01",
             label: "DSA & Algorithms Expert",
-            description: "Specialist in data structures and algorithms",
+            description: "Expert in data structures, algorithms, and problem-solving strategies for technical interviews",
             specialty: "data_structures_algorithms",
             icon: Code,
-            color: "blue"
+            color: "#3b82f6" // blue
         },
         {
-            id: "interview-coach",
-            label: "Interview Preparation Coach",
-            description: "Help with technical interview preparation",
-            specialty: "interview_prep",
-            icon: Target,
-            color: "green"
-        },
-        {
-            id: "system-design",
+            id: "node_system_design_01",
             label: "System Design Specialist",
-            description: "Expert in scalable system design",
+            description: "Expert in designing scalable, distributed systems for software engineering roles",
             specialty: "system_design",
+            icon: Database,
+            color: "#8b5cf6" // purple
+        },
+        {
+            id: "node_interview_prep_01",
+            label: "Interview Preparation Coach",
+            description: "Specialist in technical and behavioral interview preparation for placements",
+            specialty: "interview_prep",
+            icon: Briefcase,
+            color: "#10b981" // green
+        },
+        {
+            id: "node_competitive_programming_01",
+            label: "Competitive Programming Expert",
+            description: "Master of competitive programming techniques and contest strategies",
+            specialty: "competitive_programming",
+            icon: Trophy,
+            color: "#f59e0b" // amber
+        },
+        {
+            id: "node_web_development_01",
+            label: "Full Stack Web Development Expert",
+            description: "Expert in frontend, backend, and full-stack web development for software roles",
+            specialty: "web_development",
             icon: Webhook,
-            color: "purple"
+            color: "#06b6d4" // cyan
+        },
+        {
+            id: "node_machine_learning_01",
+            label: "Machine Learning & AI Specialist",
+            description: "Expert in ML/AI concepts, algorithms, and applications for data science and ML engineer roles",
+            specialty: "machine_learning",
+            icon: Brain,
+            color: "#ec4899" // pink
+        },
+        {
+            id: "node_higher_education_01",
+            label: "Higher Education Counselor",
+            description: "Expert in Masters, PhD applications, and graduate program guidance",
+            specialty: "higher_education",
+            icon: GraduationCap,
+            color: "#6366f1" // indigo
+        },
+        {
+            id: "node_competitive_exams_01",
+            label: "Competitive Exam Preparation Expert",
+            description: "Specialist in GATE, CAT, GRE, TOEFL preparation and exam strategies",
+            specialty: "competitive_exams",
+            icon: Target,
+            color: "#ef4444" // red
+        },
+        {
+            id: "node_resume_building_01",
+            label: "Resume & Portfolio Expert",
+            description: "Specialist in crafting effective resumes, CVs, and portfolios for placements",
+            specialty: "resume_building",
+            icon: FileText,
+            color: "#14b8a6" // teal
+        },
+        {
+            id: "node_soft_skills_01",
+            label: "Soft Skills & Communication Coach",
+            description: "Expert in developing communication, leadership, and interpersonal skills for career success",
+            specialty: "soft_skills",
+            icon: Users,
+            color: "#84cc16" // lime
         }
     ])
 

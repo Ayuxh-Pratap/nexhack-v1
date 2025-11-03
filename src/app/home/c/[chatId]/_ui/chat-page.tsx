@@ -13,6 +13,7 @@ import { NodeWorkspaceModal } from "../../../_ui/node/node-workspace-modal";
 import CourseOvaContainer from "../../../_ui/components/course-container";
 import { useCourseData } from "@/stores/course-mock-store";
 import { useAuth } from "@/hooks/use-auth";
+import { useChatStream } from "@/hooks/use-chat-stream";
 import type { User } from "@/types/user";
 
 interface Message {
@@ -63,6 +64,61 @@ export function ChatPage({ chatId }: ChatPageProps) {
     // In a real implementation, this would be fetched based on the chatId
     // For now, use first course by default
     const selectedCourse = courses[0];
+    
+    // Get lecture_id from course if available (for course-related chats)
+    const lectureId = selectedCourse?.lectures?.[0]?.id || null;
+
+    // Use chat stream hook
+    const aiMessageIdRef = useRef<string | null>(null);
+    const { sendMessage: streamChat, isStreaming: isStreamingChat } = useChatStream({
+        onChunk: (chunk: string) => {
+            // Update the last AI message with the new chunk
+            setMessages(prev => {
+                const lastMessage = prev[prev.length - 1];
+                if (lastMessage && lastMessage.role === 'assistant') {
+                    // Update existing message
+                    return [
+                        ...prev.slice(0, -1),
+                        {
+                            ...lastMessage,
+                            content: lastMessage.content + chunk
+                        }
+                    ];
+                } else {
+                    // Create new AI message
+                    const aiMessage: Message = {
+                        id: generateUniqueId(),
+                        content: chunk,
+                        role: 'assistant',
+                        created_at: new Date().toISOString()
+                    };
+                    aiMessageIdRef.current = aiMessage.id;
+                    return [...prev, aiMessage];
+                }
+            });
+        },
+        onComplete: async () => {
+            // Save the complete AI message using the ref to get latest state
+            setMessages(prev => {
+                const lastMessage = prev[prev.length - 1];
+                if (lastMessage && lastMessage.role === 'assistant') {
+                    // Save message asynchronously
+                    createMessage(chatId, lastMessage.content, 'assistant').catch(error => {
+                        console.error("Failed to save AI message:", error);
+                    });
+                }
+                return prev;
+            });
+            setIsLoading(false);
+            setCurrentInput('');
+            aiMessageIdRef.current = null;
+        },
+        onError: (error: Error) => {
+            console.error("Chat stream error:", error);
+            setIsLoading(false);
+            aiMessageIdRef.current = null;
+        }
+    });
     
     // Dummy function to get messages (will be replaced with RTK Query later)
     const getMessages = async (chatId: string) => {
@@ -189,56 +245,23 @@ export function ChatPage({ chatId }: ChatPageProps) {
         setIsLoading(true);
 
         try {
-            // Save user message (dummy - will be replaced with RTK Query)
+            // Save user message
             await createMessage(chatId, content, 'user');
 
-            // Prepare messages for AI (include conversation history)
-            const messagesForAI = messages.map(msg => ({
-                role: msg.role,
-                content: msg.content
-            }));
-
-            // Add the new user message
-            messagesForAI.push({
-                role: 'user',
-                content: content
-            });
-
-            // Generate AI response (dummy - will be replaced with RTK Query)
-            const aiResponse = await generateAIResponse(messagesForAI, {
-                provider: 'gemini',
-                temperature: 0.7,
-                maxTokens: 2048,
-                isStudyMode: isStudyMode,
-                chatId: chatId,
-                useNodeBasedPrompting: isNodeMode
-            });
-
-            if (aiResponse.success && aiResponse.content) {
-                const aiMessage: Message = {
-                    id: generateUniqueId(),
-                    content: aiResponse.content,
-                    role: 'assistant',
-                    created_at: new Date().toISOString()
-                };
-
-                // Add AI message to UI
-                setMessages(prev => [...prev, aiMessage]);
-
-                // Save AI message (dummy - will be replaced with RTK Query)
-                await createMessage(chatId, aiResponse.content, 'assistant');
-            } else {
-                // Fallback error message
-                const errorMessage: Message = {
-                    id: generateUniqueId(),
-                    content: "I apologize, but I'm having trouble generating a response right now. Please try again.",
-                    role: 'assistant',
-                    created_at: new Date().toISOString()
-                };
-                setMessages(prev => [...prev, errorMessage]);
+            // If node mode is active, show success toast instead of calling backend
+            if (isNodeMode) {
+                toast.success("Node mode active!", {
+                    description: "Your academic specialist team is processing your query. This is a frontend-only demo.",
+                    duration: 3000,
+                });
+                setIsLoading(false);
+                setCurrentInput('');
+                return;
             }
 
-            setIsLoading(false);
+            // Start streaming chat response using SSE
+            // Pass chatId and useNodeBasedPrompting when node mode is enabled
+            await streamChat(content, lectureId, chatId, isNodeMode);
         } catch (error) {
             console.error("Failed to send message:", error);
             // Fallback error message

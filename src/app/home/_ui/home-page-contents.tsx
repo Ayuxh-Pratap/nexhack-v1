@@ -158,15 +158,24 @@ export const HomePageContents = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    // If node mode is active, show success toast instead of simulated response
+    if (isNodeMode) {
+      toast.success("Node mode active!", {
+        description: "Your academic specialist team is processing your query. This is a frontend-only demo.",
+        duration: 3000,
+      });
+      setIsLoading(false);
+      setCurrentInput('');
+      return;
+    }
+
     // Simulate AI response (replace with actual AI integration later)
     setTimeout(() => {
       const aiMessage: Message = {
         id: generateUniqueId(),
         content: isStudyMode
           ? `Sign language translation for: "${content}". The 3D model will now demonstrate the corresponding gestures.`
-          : isNodeMode
-            ? `Medical specialist team response for: "${content}". Your healthcare specialists are analyzing your query and will provide comprehensive medical insights.`
-            : `I received your message: "${content}". This is a simulated response. In a real implementation, this would be an AI-generated response.`,
+          : `I received your message: "${content}". This is a simulated response. In a real implementation, this would be an AI-generated response.`,
         role: 'assistant',
         created_at: new Date().toISOString()
       };

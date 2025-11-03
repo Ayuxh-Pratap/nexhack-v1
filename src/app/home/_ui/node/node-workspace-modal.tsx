@@ -670,22 +670,9 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
     // Activate workspace for chat mutation
     const activateWorkspaceMutation = useMutation(
         trpc.nodeWorkspace.activateWorkspaceForChat.mutationOptions({
-            onSuccess: (data) => {
-                console.log("Workspace activated successfully:", data)
-                toast.success("Medical team activated!", { 
-                    description: `${data.summary.successful} specialists are now active for this chat` 
-                })
-                // Refresh active chat nodes
-                if (chatId) {
-                    queryClient.invalidateQueries({
-                        queryKey: trpc.chatNode.getActiveChatNodes.queryOptions({ chatId }).queryKey
-                    })
-                }
-                onClose() // Close the modal after activation
-            },
             onError: (error) => {
                 console.error("Failed to activate workspace:", error)
-                toast.error("Failed to activate medical team", { 
+                toast.error("Failed to activate academic team", { 
                     description: error.message 
                 })
             }
@@ -713,14 +700,14 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
     const handleActivateTeam = () => {
         if (!chatId) {
             toast.error("No chat selected", { 
-                description: "Please select a chat to activate the medical team" 
+                description: "Please select a chat to activate the academic team" 
             })
             return
         }
 
         if (userError) {
             toast.error("Authentication required", { 
-                description: "Please log in to activate medical teams" 
+                description: "Please log in to activate academic teams" 
             })
             return
         }
@@ -728,7 +715,7 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
         // For now, we'll create a simple configuration from the current React Flow state
         // In a full implementation, this would come from the React Flow canvas
         // Use the first available node from the database to ensure it exists
-        const firstNode = healthcareSpecialists[0]
+        const firstNode = academicSpecialists[0]
         if (!firstNode) {
             toast.error("No specialists available", {
                 description: "Please ensure specialists are loaded before activating"
@@ -739,7 +726,7 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
         const mockNodes = [
             {
                 id: "node-1",
-                type: "healthcareNode",
+                type: "academicNode",
                 position: { x: 100, y: 100 },
                 data: {
                     label: firstNode.label, // Use the actual label from the database
@@ -756,10 +743,12 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
         console.log("Using node for activation:", firstNode)
         console.log("Mock nodes being created:", mockNodes)
 
+        const teamName = `Academic Team - ${new Date().toLocaleDateString()}`
+
         // Save the configuration first
         saveWorkspaceMutation.mutate({
-            name: `Medical Team - ${new Date().toLocaleDateString()}`,
-            description: "Activated medical specialist team",
+            name: teamName,
+            description: "Activated academic specialist team",
             nodes: mockNodes,
             edges: mockEdges,
             isActive: true
@@ -773,7 +762,22 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
                     configurationId: saveData.configuration.id,
                     chatId,
                     replaceExisting: true
-                })
+                }, {
+                    // Show success toast with team name
+                    onSuccess: (data) => {
+                        console.log("Workspace activated successfully:", data)
+                        toast.success(`${teamName} activated!`, {
+                            description: `${data.summary.successful} specialist(s) are now active for this chat`
+                        })
+                        // Refresh active chat nodes
+                        if (chatId) {
+                            queryClient.invalidateQueries({
+                                queryKey: trpc.chatNode.getActiveChatNodes.queryOptions({ chatId }).queryKey
+                            })
+                        }
+                        onClose() // Close the modal after activation
+                    }
+                } as any)
             },
             onError: (error) => {
                 console.error("Failed to save workspace:", error)

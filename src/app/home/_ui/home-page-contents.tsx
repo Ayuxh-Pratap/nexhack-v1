@@ -1,8 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useTRPC } from "@/trpc/client";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BookOpen, MessageSquare } from "lucide-react";
@@ -14,6 +12,8 @@ import StudyModeLayout from "./components/study-mode-layout";
 import { NodeWorkspaceModal } from "./node/node-workspace-modal";
 import CourseOvaContainer from "./components/course-container";
 import { useCourseData } from "@/stores/course-mock-store";
+import { useAuth } from "@/hooks/use-auth";
+import type { User } from "@/types/user";
 
 interface Message {
   id: string;
@@ -38,10 +38,21 @@ export const HomePageContents = () => {
   const [currentInput, setCurrentInput] = useState<string>('');
   const [activeTab, setActiveTab] = useState("course"); // Default to course
   const router = useRouter();
-  const trpc = useTRPC();
+  const { user: authUser, isLoading: authLoading } = useAuth();
 
-  // Fetch user profile
-  const { data: user } = useSuspenseQuery(trpc.user.getProfile.queryOptions());
+  // Map auth user to expected User type for CourseOvaContainer
+  const user: User | null = useMemo(() => {
+    if (!authUser) return null;
+    return {
+      id: authUser.id,
+      name: authUser.name || "",
+      email: authUser.email,
+      image: authUser.avatar || null,
+      emailVerified: authUser.emailVerified || false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }, [authUser]);
 
   // Get courses from store
   const { courses, getCourseById } = useCourseData();
@@ -68,28 +79,30 @@ export const HomePageContents = () => {
     console.log('Node mode state changed to:', isNodeMode);
   }, [isStudyMode, isNodeMode]);
 
-  const createChatMutation = useMutation(trpc.chat.createChat.mutationOptions({
-    onSuccess: (data: any) => {
-      // Check if we have a valid chat ID before redirecting
-      if (!data?.chat?.id) {
-        toast.error("Failed to create chat: Invalid chat ID");
-        setIsLoading(false);
-        setPendingMessage('');
-        return;
+  // Dummy function to create chat (will be replaced with RTK Query later)
+  const createChat = async (title: string) => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Generate dummy chat ID
+    const chatId = `chat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    return {
+      success: true,
+      message: "Chat created successfully",
+      chat: {
+        id: chatId,
+        title: title,
+        userId: authUser?.id || "user-1",
+        isArchived: false,
+        isPinned: false,
+        lastMessageId: null,
+        lastMessageAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }
-
-      // Redirect to the new chat with the message as URL parameter
-      const url = pendingMessage ? `/home/c/${data.chat.id}?message=${encodeURIComponent(pendingMessage)}` : `/home/c/${data.chat.id}`;
-      router.push(url);
-      setPendingMessage(''); // Clear the pending message
-    },
-    onError: (error: any) => {
-      toast.error("Failed to create chat. Please try again.");
-      console.error("Error creating chat:", error);
-      setIsLoading(false);
-      setPendingMessage(''); // Clear the pending message on error
-    }
-  }));
+    };
+  };
 
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
@@ -105,11 +118,24 @@ export const HomePageContents = () => {
       try {
         // Create a new chat with the message content as title
         const title = content.length > 50 ? content.substring(0, 50) + "..." : content;
-        await createChatMutation.mutateAsync({ title });
+        const data = await createChat(title);
 
-        // The redirect will happen in the onSuccess callback
+        // Check if we have a valid chat ID before redirecting
+        if (!data?.chat?.id) {
+          toast.error("Failed to create chat: Invalid chat ID");
+          setIsLoading(false);
+          setPendingMessage('');
+          return;
+        }
+
+        // Redirect to the new chat with the message as URL parameter
+        const url = pendingMessage ? `/home/c/${data.chat.id}?message=${encodeURIComponent(pendingMessage)}` : `/home/c/${data.chat.id}`;
+        router.push(url);
+        setPendingMessage(''); // Clear the pending message
         return;
       } catch (error) {
+        toast.error("Failed to create chat. Please try again.");
+        console.error("Error creating chat:", error);
         setIsLoading(false);
         setPendingMessage(''); // Clear on error
         return;
@@ -196,11 +222,19 @@ export const HomePageContents = () => {
         </div>
 
         <TabsContent value="course" className="flex-1 mt-0 p-0" style={{ paddingTop: 'calc(var(--header-height) + 1rem)' }}>
-          <CourseOvaContainer 
-            user={user} 
-            course={selectedCourse}
-            courses={courses}
-          />
+          {user ? (
+            <CourseOvaContainer 
+              user={user} 
+              course={selectedCourse}
+              courses={courses}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <p className="text-muted-foreground">Loading user data...</p>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="chat" className="flex-1 mt-0 p-0">

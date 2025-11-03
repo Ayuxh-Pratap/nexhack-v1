@@ -30,23 +30,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { authClient } from "@/lib/auth-client"
-import { useRouter } from "next/navigation"
 import { SettingsModal } from "@/components/settings/settings-modal"
 
 export function SiteHeader() {
     const { toggleSidebar } = useSidebar()
-    const { user } = useSession()
-    const router = useRouter()
+    const { user, signOut } = useSession()
     const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-
-    const signout = async () => {
-        await authClient.signOut({
-            fetchOptions: {
-                onSuccess: () => router.push("/login"),
-            },
-        })
-    }
 
     return (
         <>
@@ -115,7 +104,7 @@ export function SiteHeader() {
                                 </DropdownMenuItem>
                             </DropdownMenuGroup>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={signout}>
+                            <DropdownMenuItem onClick={signOut}>
                                 <LogOut className="mr-2 h-4 w-4" />
                                 Log out
                             </DropdownMenuItem>

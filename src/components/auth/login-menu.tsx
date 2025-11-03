@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth-client";
+import { useAppDispatch } from "@/lib/store/hooks";
+import { signInWithGoogle } from "@/store/slices/auth/authThunks";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import type { UserRole } from "@/types/auth";
 
 interface LoginMenuProps {
   variant?: "default" | "mobile";
@@ -18,20 +21,21 @@ interface LoginMenuProps {
 
 export const LoginMenu = ({ variant = "default" }: LoginMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
 
-  const signinWithGithub = async () => {
-    await authClient.signIn.social({
-      callbackURL: "/",
-      provider: "github",
-    });
+  const handleGoogleSignIn = async (role: UserRole = "student") => {
+    try {
+      await dispatch(signInWithGoogle(role)).unwrap();
+      toast.success("Signed in with Google!");
+      setIsOpen(false);
+      router.push("/home");
+    } catch (error: any) {
+      toast.error(error || "Google sign-in failed");
+    }
   };
 
-  const signinWithGoogle = async () => {
-    await authClient.signIn.social({
-      callbackURL: "/",
-      provider: "google",
-    });
-  };
+  const signinWithGoogle = () => handleGoogleSignIn("student");
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -68,28 +72,28 @@ export const LoginMenu = ({ variant = "default" }: LoginMenuProps) => {
         {/* Login Options */}
         <div className="space-y-1">
           <DropdownMenuItem 
-            onClick={signinWithGoogle}
+            onClick={() => handleGoogleSignIn("student")}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-neutral-800/50 hover:text-neutral-100 transition-all duration-200 cursor-pointer group"
           >
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-blue-50 transition-all duration-200">
               <FcGoogle className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-neutral-100">Continue with Google</span>
-              <span className="text-xs text-neutral-500">Sign in with your Google account</span>
+              <span className="text-sm font-medium text-neutral-100">Continue as Student</span>
+              <span className="text-xs text-neutral-500">Sign in with Google as student</span>
             </div>
           </DropdownMenuItem>
 
           <DropdownMenuItem 
-            onClick={signinWithGithub}
+            onClick={() => handleGoogleSignIn("teacher")}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-neutral-800/50 hover:text-neutral-100 transition-all duration-200 cursor-pointer group"
           >
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/50 transition-all bg-purple-500/30 duration-200">
-              <FaGithub className="h-4 w-4 text-neutral-400" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-blue-50 transition-all duration-200">
+              <FcGoogle className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-neutral-100">Continue with GitHub</span>
-              <span className="text-xs text-neutral-500">Sign in with your GitHub account</span>
+              <span className="text-sm font-medium text-neutral-100">Continue as Teacher</span>
+              <span className="text-xs text-neutral-500">Sign in with Google as teacher</span>
             </div>
           </DropdownMenuItem>
         </div>

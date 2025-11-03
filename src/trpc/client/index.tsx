@@ -9,6 +9,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 
 import { AppRouter } from "../server/routers/_app";
 import { makeQueryClient } from "./query-client";
+import { tokenService } from "@/services/tokenService";
 
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 
@@ -39,6 +40,16 @@ export const TRPCReactProvider = (props: Readonly<{
       httpBatchLink({
         transformer: superjson,
         url: getUrl(),
+        headers: () => {
+          // Get backend token from tokenService
+          const backendToken = tokenService.getBackendToken();
+          if (backendToken) {
+            return {
+              authorization: `Bearer ${backendToken}`,
+            };
+          }
+          return {};
+        },
       }),
     ],
   }));

@@ -9,8 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useTRPC } from "@/trpc/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+// tRPC removed - will use RTK Query later
 import { useTheme } from "@/components/global/theme-provider";
 
 interface SettingsModalProps {
@@ -43,19 +42,20 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
     const [editedName, setEditedName] = useState(user?.name || "");
     const [localUserName, setLocalUserName] = useState(user?.name || "");
 
-    const trpc = useTRPC();
-    const queryClient = useQueryClient();
     const { theme, setTheme, isTransitioning } = useTheme();
 
-    const updateProfile = useMutation(trpc.user.updateProfile.mutationOptions({
-        onError: (error) => toast.error("Error updating profile", { description: error.message }),
-        onSuccess: (data: { user: { name: string } }) => {
-            toast.success("Profile updated successfully", { description: `Your name has been updated to "${data.user.name}"` });
-            setLocalUserName(data.user.name);
+    // Dummy function to update profile (will be replaced with RTK Query later)
+    const updateProfile = {
+        mutate: async (data: { name: string; email: string }) => {
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 500));
+            // Update local state
+            setLocalUserName(data.name);
             setIsEditingName(false);
-            queryClient.invalidateQueries({ queryKey: trpc.user.getProfile.queryOptions().queryKey });
-        }
-    }));
+            toast.success("Profile updated successfully", { description: `Your name has been updated to "${data.name}"` });
+        },
+        isPending: false
+    };
 
     const handleDeleteAllChats = () => {
         // TODO: Implement delete all chats functionality
@@ -74,7 +74,7 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
         }
 
         try {
-            updateProfile.mutate({
+            await updateProfile.mutate({
                 name: editedName.trim(),
                 email: user?.email || ""
             });

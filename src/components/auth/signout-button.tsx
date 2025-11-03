@@ -1,21 +1,27 @@
 "use client";
 import { useRouter } from "next/navigation";
-
-import { authClient } from "@/lib/auth-client";
+import { useAppDispatch } from "@/lib/store/hooks";
+import { signOut } from "@/store/slices/auth/authThunks";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const SignoutButton = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
-  const signout = async () => await authClient.signOut({
-    fetchOptions: {
-      onSuccess: () => router.push("/login"),
-    },
-  });
+  const handleSignOut = async () => {
+    try {
+      await dispatch(signOut()).unwrap();
+      toast.success("Signed out successfully");
+      router.push("/login");
+    } catch (error: any) {
+      toast.error(error || "Sign out failed");
+    }
+  };
 
   return (
     <Button
-      onClick={signout}
+      onClick={handleSignOut}
       variant="outline"
     >
       Sign Out

@@ -1,70 +1,40 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
+import { useAppDispatch } from "@/lib/store/hooks";
+import { signOut as signOutThunk } from "@/store/slices/auth/authThunks";
+import { useAuth } from "./use-auth";
+import { useRouter } from "next/navigation";
 
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    emailVerified: boolean;
-    image?: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
+/**
+ * useSession hook - maintained for backward compatibility
+ * Now uses Redux auth state under the hood
+ */
 export const useSession = () => {
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+    const dispatch = useAppDispatch();
+    const router = useRouter();
+    const { user, isLoading, error } = useAuth();
 
-    // Get session data
-    const getSession = async () => {
-        try {
-            setIsLoading(true);
-            setError(null);
-            const session = await authClient.getSession();
-            console.log(session.data?.user);
-
-            if (session.data?.user) {
-                setUser(session.data.user as User);
-            } else {
-                setUser(null);
-            }
-        } catch (err) {
-            setError(err as Error);
-            setUser(null);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Sign out function
     const signOut = async () => {
         try {
-            await authClient.signOut();
-            setUser(null);
-            setError(null);
+            await dispatch(signOutThunk()).unwrap();
+            router.push("/login");
         } catch (err) {
-            setError(err as Error);
+            console.error("Sign out error:", err);
         }
     };
 
-    // Initialize session on mount
-    useEffect(() => {
-        getSession();
-    }, []);
-
-    // Debug: Log when user state changes
-    useEffect(() => {
-        console.log("useSession user state changed:", user);
-    }, [user]);
-
     return {
-        user,
+        user: user ? {
+            id: user.id,
+            name: user.name || "",
+            email: user.email,
+            emailVerified: user.emailVerified || false,
+            image: user.avatar || null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        } : null,
         isLoading,
         error,
         signOut,
-        getSession,
     };
 };

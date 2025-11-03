@@ -5,9 +5,9 @@ import { useEffect, useState, useRef, useCallback } from "react"
 import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useTRPC } from "@/trpc/client"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+// tRPC removed - will use RTK Query later
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/use-auth"
 import {
   X,
   Play,
@@ -627,77 +627,78 @@ function NodeWorkspaceFlow({ academicSpecialists }: { academicSpecialists: any[]
 
 export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceModalProps) {
     const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null)
-    const trpc = useTRPC()
-    const queryClient = useQueryClient()
+    const [isLoadingNodes, setIsLoadingNodes] = useState(false)
+    const { user: authUser } = useAuth()
 
-    // Fetch current user
-    const { data: userData, error: userError } = useQuery(
-        trpc.user.getProfile.queryOptions()
-    )
-
-    // Fetch available nodes from database
-    const { data: nodesData, isLoading: isLoadingNodes, error: nodesError } = useQuery(
-        trpc.node.getAvailableNodes.queryOptions({
-            includeInactive: false,
-            includeUserNodes: true,
-            limit: 50,
-            offset: 0
-        })
-    )
-
-    // Fetch active chat nodes if chatId is provided
-    const { data: activeChatNodes } = useQuery({
-        ...trpc.chatNode.getActiveChatNodes.queryOptions({ 
-            chatId: chatId || '', 
-            includeInactive: false 
-        }),
-        enabled: !!chatId
-    })
-
-    // Convert database nodes to academic specialists format
-    const academicSpecialists = nodesData?.nodes?.map(node => {
-        const IconComponent = specialtyIconMap[node.specialty] || specialtyIconMap.default || BookOpen
-        return {
-            id: node.id,
-            label: node.name,
-            description: node.description,
-            specialty: node.specialty,
-            icon: IconComponent,
-            color: "blue" // Default color, can be customized later
+    // Dummy data for nodes (will be replaced with RTK Query later)
+    const [academicSpecialists, setAcademicSpecialists] = useState([
+        {
+            id: "dsa-expert",
+            label: "DSA & Algorithms Expert",
+            description: "Specialist in data structures and algorithms",
+            specialty: "data_structures_algorithms",
+            icon: Code,
+            color: "blue"
+        },
+        {
+            id: "interview-coach",
+            label: "Interview Preparation Coach",
+            description: "Help with technical interview preparation",
+            specialty: "interview_prep",
+            icon: Target,
+            color: "green"
+        },
+        {
+            id: "system-design",
+            label: "System Design Specialist",
+            description: "Expert in scalable system design",
+            specialty: "system_design",
+            icon: Webhook,
+            color: "purple"
         }
-    }) || []
+    ])
 
-    // Activate workspace for chat mutation
-    const activateWorkspaceMutation = useMutation(
-        trpc.nodeWorkspace.activateWorkspaceForChat.mutationOptions({
-            onError: (error) => {
-                console.error("Failed to activate workspace:", error)
-                toast.error("Failed to activate academic team", { 
-                    description: error.message 
-                })
+    // Load dummy nodes on mount
+    useEffect(() => {
+        setIsLoadingNodes(true)
+        // Simulate API call
+        setTimeout(() => {
+            setIsLoadingNodes(false)
+        }, 500)
+    }, [])
+
+    // Dummy function to activate workspace (will be replaced with RTK Query later)
+    const activateWorkspaceMutation = {
+        mutate: async (data: { configurationId: string; chatId: string; replaceExisting: boolean }) => {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            return {
+                success: true,
+                summary: {
+                    successful: 1,
+                    failed: 0
+                }
             }
-        })
-    )
+        },
+        isPending: false
+    }
 
-    // Save workspace configuration mutation
-    const saveWorkspaceMutation = useMutation(
-        trpc.nodeWorkspace.saveWorkspaceConfiguration.mutationOptions({
-            onSuccess: (data) => {
-                console.log("Workspace saved successfully:", data)
-                toast.success("Workspace saved!", { 
-                    description: `Configuration "${data.configuration.name}" saved successfully` 
-                })
-            },
-            onError: (error) => {
-                console.error("Failed to save workspace:", error)
-                toast.error("Failed to save workspace", { 
-                    description: error.message 
-                })
+    // Dummy function to save workspace (will be replaced with RTK Query later)
+    const saveWorkspaceMutation = {
+        mutate: async (data: { name: string; description: string; nodes: any[]; edges: any[]; isActive: boolean }) => {
+            await new Promise(resolve => setTimeout(resolve, 800))
+            return {
+                success: true,
+                configuration: {
+                    id: `config-${Date.now()}`,
+                    name: data.name,
+                    description: data.description
+                }
             }
-        })
-    )
+        },
+        isPending: false
+    }
 
-    const handleActivateTeam = () => {
+    const handleActivateTeam = async () => {
         if (!chatId) {
             toast.error("No chat selected", { 
                 description: "Please select a chat to activate the academic team" 
@@ -705,7 +706,7 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
             return
         }
 
-        if (userError) {
+        if (!authUser) {
             toast.error("Authentication required", { 
                 description: "Please log in to activate academic teams" 
             })
@@ -745,47 +746,38 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
 
         const teamName = `Academic Team - ${new Date().toLocaleDateString()}`
 
-        // Save the configuration first
-        saveWorkspaceMutation.mutate({
-            name: teamName,
-            description: "Activated academic specialist team",
-            nodes: mockNodes,
-            edges: mockEdges,
-            isActive: true
-        }, {
-            onSuccess: (saveData) => {
-                console.log("Workspace saved successfully:", saveData)
-                console.log("Mock nodes being activated:", mockNodes)
-                
-                // Then activate it for the chat
-                activateWorkspaceMutation.mutate({
-                    configurationId: saveData.configuration.id,
-                    chatId,
-                    replaceExisting: true
-                }, {
-                    // Show success toast with team name
-                    onSuccess: (data) => {
-                        console.log("Workspace activated successfully:", data)
-                        toast.success(`${teamName} activated!`, {
-                            description: `${data.summary.successful} specialist(s) are now active for this chat`
-                        })
-                        // Refresh active chat nodes
-                        if (chatId) {
-                            queryClient.invalidateQueries({
-                                queryKey: trpc.chatNode.getActiveChatNodes.queryOptions({ chatId }).queryKey
-                            })
-                        }
-                        onClose() // Close the modal after activation
-                    }
-                } as any)
-            },
-            onError: (error) => {
-                console.error("Failed to save workspace:", error)
-                toast.error("Failed to save workspace", {
-                    description: error.message || "Please try again"
-                })
-            }
-        })
+        try {
+            // Save the configuration first
+            const saveData = await saveWorkspaceMutation.mutate({
+                name: teamName,
+                description: "Activated academic specialist team",
+                nodes: mockNodes,
+                edges: mockEdges,
+                isActive: true
+            })
+
+            console.log("Workspace saved successfully:", saveData)
+            console.log("Mock nodes being activated:", mockNodes)
+            
+            // Then activate it for the chat
+            const activateData = await activateWorkspaceMutation.mutate({
+                configurationId: saveData.configuration.id,
+                chatId,
+                replaceExisting: true
+            })
+
+            // Show success toast with team name
+            console.log("Workspace activated successfully:", activateData)
+            toast.success(`${teamName} activated!`, {
+                description: `${activateData.summary.successful} specialist(s) are now active for this chat`
+            })
+            onClose() // Close the modal after activation
+        } catch (error: any) {
+            console.error("Failed to save/activate workspace:", error)
+            toast.error("Failed to save workspace", {
+                description: error.message || "Please try again"
+            })
+        }
     }
 
   useEffect(() => {
@@ -860,7 +852,7 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
                                 size="sm"
                                 className="h-9 px-4 text-sm"
                                 onClick={handleActivateTeam}
-                                disabled={activateWorkspaceMutation.isPending || saveWorkspaceMutation.isPending || !chatId || !!userError}
+                                disabled={activateWorkspaceMutation.isPending || saveWorkspaceMutation.isPending || !chatId || !authUser}
                             >
                                 {activateWorkspaceMutation.isPending || saveWorkspaceMutation.isPending ? (
                                     <>
@@ -902,13 +894,6 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
                                                 <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                                                 Loading specialists...
               </div>
-              </div>
-                                    ) : nodesError ? (
-                                        <div className="flex items-center justify-center py-8">
-                                            <div className="text-center text-muted-foreground">
-                                                <div className="text-sm">Failed to load specialists</div>
-                                                <div className="text-xs mt-1">Please try again later</div>
-                </div>
               </div>
                                     ) : academicSpecialists.length === 0 ? (
                                         <div className="flex items-center justify-center py-8">

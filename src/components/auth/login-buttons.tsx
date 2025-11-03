@@ -1,38 +1,39 @@
 "use client";
-import { FaGithub } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
-
-import { authClient } from "@/lib/auth-client";
+import { useAppDispatch } from "@/lib/store/hooks";
+import { signInWithGoogle } from "@/store/slices/auth/authThunks";
 import { Button } from "@/components/ui/button";
+import { FcGoogle } from "react-icons/fc";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import type { UserRole } from "@/types/auth";
 
-export const LoginButtons = () => {
-  const signinWithGithub = async () => await authClient.signIn.social({
-    callbackURL: "/",
-    provider: "github",
-  });
+interface LoginButtonsProps {
+  role?: UserRole;
+}
 
-  const signinWithGoogle = async () => await authClient.signIn.social({
-    callbackURL: "/",
-    provider: "google",
-  });
+export const LoginButtons = ({ role = "student" }: LoginButtonsProps) => {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await dispatch(signInWithGoogle(role)).unwrap();
+      toast.success("Signed in with Google!");
+      router.push("/home");
+    } catch (error: any) {
+      toast.error(error || "Google sign-in failed");
+    }
+  };
 
   return (
     <div className="flex items-center justify-between">
       <Button
-        className="w-[45%]"
-        onClick={signinWithGithub}
+        className="w-full"
+        onClick={handleGoogleSignIn}
         variant="outline"
       >
-        <FaGithub/>
-        Github
-      </Button>
-      <Button
-        className="w-[45%]"
-        onClick={signinWithGoogle}
-        variant="outline"
-      >
-        <FcGoogle/>
-        Google
+        <FcGoogle className="mr-2"/>
+        Continue with Google
       </Button>
     </div>
   );

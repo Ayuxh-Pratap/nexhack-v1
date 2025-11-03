@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-import { TRPCReactProvider } from "@/trpc/client";
+import { ReduxProvider } from "@/lib/store/ReduxProvider";
 
 interface ProviderProps {
   children: React.ReactNode;
@@ -17,8 +17,8 @@ export const Provider = ({children}: ProviderProps) => {
   if(!isMounted) return null;
 
   return (
-    <TRPCReactProvider>
+    <ReduxProvider>
       {children}
-    </TRPCReactProvider>
+    </ReduxProvider>
   );
 };

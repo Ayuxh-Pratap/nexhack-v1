@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTRPC } from "@/trpc/client";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BookOpen, MessageSquare } from "lucide-react";
@@ -13,8 +11,9 @@ import ChatInput from "../../../_ui/components/chat-input";
 import StudyModeLayout from "../../../_ui/components/study-mode-layout";
 import { NodeWorkspaceModal } from "../../../_ui/node/node-workspace-modal";
 import CourseOvaContainer from "../../../_ui/components/course-container";
-import { prepareVeloraAIRequest } from "@/utils/velora-client-utils";
 import { useCourseData } from "@/stores/course-mock-store";
+import { useAuth } from "@/hooks/use-auth";
+import type { User } from "@/types/user";
 
 interface Message {
     id: string;
@@ -43,10 +42,21 @@ export function ChatPage({ chatId }: ChatPageProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialMessageProcessed = useRef(false);
-    const trpc = useTRPC();
+    const { user: authUser, isLoading: authLoading } = useAuth();
 
-    // Fetch user profile
-    const { data: user } = useSuspenseQuery(trpc.user.getProfile.queryOptions());
+    // Map auth user to expected User type for CourseOvaContainer
+    const user: User | null = useMemo(() => {
+        if (!authUser) return null;
+        return {
+            id: authUser.id,
+            name: authUser.name || "",
+            email: authUser.email,
+            image: authUser.avatar || null,
+            emailVerified: authUser.emailVerified || false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+    }, [authUser]);
 
     // Get courses from store
     const { courses, getCourseById } = useCourseData();
@@ -54,86 +64,91 @@ export function ChatPage({ chatId }: ChatPageProps) {
     // For now, use first course by default
     const selectedCourse = courses[0];
     
-    // Fetch existing messages using tRPC
-    const { 
-        data: messagesData, 
-        error: messagesError, 
-        isLoading: isLoadingMessages,
-        refetch: refetchMessages 
-    } = useSuspenseQuery(trpc.message.getMessages.queryOptions({ 
-        chatId,
-        limit: 50,
-        offset: 0,
-        includeDeleted: false
-    }));
+    // Dummy function to get messages (will be replaced with RTK Query later)
+    const getMessages = async (chatId: string) => {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Return dummy messages (in real app, this would fetch from backend)
+        return {
+            messages: [],
+            total: 0,
+            hasMore: false
+        };
+    };
 
-    // Create message mutation
-    const createMessageMutation = useMutation(
-        trpc.message.createMessage.mutationOptions({
-            onSuccess: (data: any) => {
-                // Message was saved successfully
-                console.log('Message saved:', data);
-                // Refetch messages to get the latest data
-                refetchMessages();
-            },
-            onError: (error: any) => {
-                toast.error("Failed to save message");
-                console.error("Error saving message:", error);
+    // Dummy function to create message (will be replaced with RTK Query later)
+    const createMessage = async (chatId: string, content: string, messageType: 'user' | 'assistant') => {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Just log for now (will be replaced with actual API call)
+        console.log('Message saved (dummy):', { chatId, content, messageType });
+        
+        return {
+            success: true,
+            message: {
+                id: generateUniqueId(),
+                chatId,
+                content,
+                messageType,
+                createdAt: new Date().toISOString()
             }
-        })
-    );
+        };
+    };
 
-    // AI response mutation
-    const aiResponseMutation = useMutation(
-        trpc.ai.generateResponse.mutationOptions({
-            onSuccess: (data: any) => {
-                if (data.success && data.content) {
-                    const aiMessage: Message = {
-                        id: generateUniqueId(),
-                        content: data.content,
-                        role: 'assistant',
-                        created_at: new Date().toISOString()
-                    };
+    // Dummy function to generate AI response (will be replaced with RTK Query later)
+    const generateAIResponse = async (messages: Array<{ role: string; content: string }>, config: any) => {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Generate dummy AI response based on mode
+        let content = "";
+        if (config.isStudyMode) {
+            content = `Sign language translation for: "${messages[messages.length - 1]?.content}". The 3D model will now demonstrate the corresponding gestures.`;
+        } else if (config.useNodeBasedPrompting) {
+            content = `Academic specialist team response for: "${messages[messages.length - 1]?.content}". Your academic specialists are analyzing your query and will provide comprehensive insights.`;
+        } else {
+            content = `I understand your question: "${messages[messages.length - 1]?.content}". As your academic mentor, I'm here to help you with placements, higher studies, and career guidance. This is a simulated response - the actual FastAPI backend will provide real AI-powered responses.`;
+        }
+        
+        return {
+            success: true,
+            content: content
+        };
+    };
 
-                    // Immediate state update for seamless UI
-                    setMessages(prev => [...prev, aiMessage]);
-
-                    // Save AI message to database
-                    createMessageMutation.mutateAsync({
-                        chatId,
-                        content: data.content,
-                        messageType: 'assistant'
-                    }).catch(error => {
-                        console.error("Failed to save AI message:", error);
-                    });
-                } else {
-                    // Fallback error message
-                    const errorMessage: Message = {
-                        id: generateUniqueId(),
-                        content: "I apologize, but I'm having trouble generating a response right now. Please try again.",
-                        role: 'assistant',
-                        created_at: new Date().toISOString()
-                    };
-                    // Immediate state update for seamless UI
-                    setMessages(prev => [...prev, errorMessage]);
+    // Load messages on mount (dummy data for now)
+    const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+    useEffect(() => {
+        const loadMessages = async () => {
+            setIsLoadingMessages(true);
+            try {
+                const data = await getMessages(chatId);
+                if (data?.messages) {
+                    const formattedMessages: Message[] = data.messages.map((msg: any) => ({
+                        id: msg.id,
+                        content: msg.content,
+                        role: msg.messageType === 'assistant' ? 'assistant' : 'user',
+                        created_at: msg.createdAt
+                    }));
+                    formattedMessages.sort((a, b) => 
+                        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                    );
+                    setMessages(formattedMessages);
                 }
-                setIsLoading(false);
-            },
-            onError: (error: any) => {
-                console.error("AI response error:", error);
-                // Fallback error message
-                const errorMessage: Message = {
-                    id: generateUniqueId(),
-                    content: "I apologize, but I'm having trouble generating a response right now. Please try again.",
-                    role: 'assistant',
-                    created_at: new Date().toISOString()
-                };
-                // Immediate state update for seamless UI
-                setMessages(prev => [...prev, errorMessage]);
-                setIsLoading(false);
+            } catch (error) {
+                console.error("Failed to load messages:", error);
+                toast.error("Failed to load chat history");
+            } finally {
+                setIsLoadingMessages(false);
             }
-        })
-    );
+        };
+        
+        if (chatId && chatId !== 'undefined') {
+            loadMessages();
+        }
+    }, [chatId]);
 
     // Check if chatId is valid
     useEffect(() => {
@@ -144,32 +159,6 @@ export function ChatPage({ chatId }: ChatPageProps) {
         }
     }, [chatId, router]);
 
-    // Handle messages error
-    useEffect(() => {
-        if (messagesError) {
-            toast.error("Failed to load chat history");
-            console.error("Messages error:", messagesError);
-        }
-    }, [messagesError]);
-
-    // Load existing messages when data is fetched
-    useEffect(() => {
-        if (messagesData?.messages) {
-            const formattedMessages: Message[] = messagesData.messages.map((msg: any) => ({
-                id: msg.id,
-                content: msg.content,
-                role: msg.messageType === 'assistant' ? 'assistant' : 'user',
-                created_at: msg.createdAt
-            }));
-            
-            // Sort messages by creation time (oldest first for display)
-            formattedMessages.sort((a, b) => 
-                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            );
-            
-            setMessages(formattedMessages);
-        }
-    }, [messagesData]);
 
     const handleSendMessage = async (content: string) => {
         if (!content.trim()) return;
@@ -200,12 +189,8 @@ export function ChatPage({ chatId }: ChatPageProps) {
         setIsLoading(true);
 
         try {
-            // Save user message to database
-            await createMessageMutation.mutateAsync({
-                chatId,
-                content,
-                messageType: 'user'
-            });
+            // Save user message (dummy - will be replaced with RTK Query)
+            await createMessage(chatId, content, 'user');
 
             // Prepare messages for AI (include conversation history)
             const messagesForAI = messages.map(msg => ({
@@ -219,20 +204,51 @@ export function ChatPage({ chatId }: ChatPageProps) {
                 content: content
             });
 
-            // Generate AI response with appropriate mode
-            const aiRequest = prepareVeloraAIRequest(messagesForAI, {
+            // Generate AI response (dummy - will be replaced with RTK Query)
+            const aiResponse = await generateAIResponse(messagesForAI, {
                 provider: 'gemini',
                 temperature: 0.7,
                 maxTokens: 2048,
                 isStudyMode: isStudyMode,
-                chatId: chatId, // Include chatId for node-based prompting
-                useNodeBasedPrompting: isNodeMode // Enable node-based prompting in node mode
+                chatId: chatId,
+                useNodeBasedPrompting: isNodeMode
             });
 
-            await aiResponseMutation.mutateAsync(aiRequest as any);
+            if (aiResponse.success && aiResponse.content) {
+                const aiMessage: Message = {
+                    id: generateUniqueId(),
+                    content: aiResponse.content,
+                    role: 'assistant',
+                    created_at: new Date().toISOString()
+                };
 
+                // Add AI message to UI
+                setMessages(prev => [...prev, aiMessage]);
+
+                // Save AI message (dummy - will be replaced with RTK Query)
+                await createMessage(chatId, aiResponse.content, 'assistant');
+            } else {
+                // Fallback error message
+                const errorMessage: Message = {
+                    id: generateUniqueId(),
+                    content: "I apologize, but I'm having trouble generating a response right now. Please try again.",
+                    role: 'assistant',
+                    created_at: new Date().toISOString()
+                };
+                setMessages(prev => [...prev, errorMessage]);
+            }
+
+            setIsLoading(false);
         } catch (error) {
             console.error("Failed to send message:", error);
+            // Fallback error message
+            const errorMessage: Message = {
+                id: generateUniqueId(),
+                content: "I apologize, but I'm having trouble generating a response right now. Please try again.",
+                role: 'assistant',
+                created_at: new Date().toISOString()
+            };
+            setMessages(prev => [...prev, errorMessage]);
             setIsLoading(false);
         }
 
@@ -321,11 +337,19 @@ export function ChatPage({ chatId }: ChatPageProps) {
                 </div>
 
                 <TabsContent value="course" className="flex-1 mt-0 p-0" style={{ paddingTop: 'calc(var(--header-height) + 1rem)' }}>
-                    <CourseOvaContainer 
-                        user={user} 
-                        course={selectedCourse}
-                        courses={courses}
-                    />
+                    {user ? (
+                        <CourseOvaContainer 
+                            user={user} 
+                            course={selectedCourse}
+                            courses={courses}
+                        />
+                    ) : (
+                        <div className="flex items-center justify-center h-full">
+                            <div className="text-center">
+                                <p className="text-muted-foreground">Loading user data...</p>
+                            </div>
+                        </div>
+                    )}
                 </TabsContent>
 
                 <TabsContent value="chat" className="flex-1 mt-0 p-0">
@@ -365,11 +389,19 @@ export function ChatPage({ chatId }: ChatPageProps) {
                     </div>
 
                     <TabsContent value="course" className="flex-1 mt-0 p-0" style={{ paddingTop: 'calc(var(--header-height) + 1rem)' }}>
-                        <CourseOvaContainer 
-                            user={user} 
-                            course={selectedCourse}
-                            courses={courses}
-                        />
+                        {user ? (
+                            <CourseOvaContainer 
+                                user={user} 
+                                course={selectedCourse}
+                                courses={courses}
+                            />
+                        ) : (
+                            <div className="flex items-center justify-center h-full">
+                                <div className="text-center">
+                                    <p className="text-muted-foreground">Loading user data...</p>
+                                </div>
+                            </div>
+                        )}
                     </TabsContent>
 
                     <TabsContent value="chat" className="flex-1 mt-0 p-0">
@@ -426,11 +458,19 @@ export function ChatPage({ chatId }: ChatPageProps) {
                 </div>
 
                 <TabsContent value="course" className="flex-1 mt-0 p-0" style={{ paddingTop: 'calc(var(--header-height) + 1rem)' }}>
-                    <CourseOvaContainer 
-                        user={user} 
-                        course={selectedCourse}
-                        courses={courses}
-                    />
+                    {user ? (
+                        <CourseOvaContainer 
+                            user={user} 
+                            course={selectedCourse}
+                            courses={courses}
+                        />
+                    ) : (
+                        <div className="flex items-center justify-center h-full">
+                            <div className="text-center">
+                                <p className="text-muted-foreground">Loading user data...</p>
+                            </div>
+                        </div>
+                    )}
                 </TabsContent>
 
                 <TabsContent value="chat" className="flex-1 mt-0 p-0">

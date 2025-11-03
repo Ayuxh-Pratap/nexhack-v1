@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 
 import { ReduxProvider } from "@/lib/store/ReduxProvider";
+import { GoogleOAuthProviderWrapper } from "@/components/google/google-oauth-provider";
 
 interface ProviderProps {
   children: React.ReactNode;
@@ -18,7 +19,9 @@ export const Provider = ({children}: ProviderProps) => {
 
   return (
     <ReduxProvider>
-      {children}
+      <GoogleOAuthProviderWrapper>
+        {children}
+      </GoogleOAuthProviderWrapper>
     </ReduxProvider>
   );
 };

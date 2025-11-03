@@ -1,10 +1,11 @@
 "use client"
 
-import { SidebarIcon, Settings, User, LogOut } from "lucide-react"
+import { SidebarIcon, Settings, User, LogOut, Calendar } from "lucide-react"
 import { useSession } from "@/hooks/use-session"
 import { useState } from "react"
 
 import { SearchForm } from "@/components/navigation/sidebar/search-form"
+import { ConnectCalendarButton } from "@/components/google/connect-calendar-button"
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -102,6 +103,16 @@ export function SiteHeader() {
                                     <Settings className="mr-2 h-4 w-4" />
                                     Settings
                                 </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuGroup>
+                                <div className="px-2 py-1.5">
+                                    <ConnectCalendarButton
+                                        onSuccess={() => {
+                                            // Optionally refresh user data or show success message
+                                        }}
+                                    />
+                                </div>
                             </DropdownMenuGroup>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={signOut}>

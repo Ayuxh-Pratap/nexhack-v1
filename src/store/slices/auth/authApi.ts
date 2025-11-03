@@ -47,6 +47,18 @@ export const authApi = createApi({
                 },
             }),
         }),
+        // Exchange Google OAuth code for tokens
+        exchangeGoogleToken: builder.mutation<{ success: boolean; message?: string }, { code: string }>({
+            query: (body) => ({
+                url: "/user/token",
+                method: "POST",
+                body,
+            }),
+        }),
+        // Check Google Calendar connection status
+        getGoogleConnectionStatus: builder.query<{ connected: boolean; email?: string }, void>({
+            query: () => "/user/google/status",
+        }),
     }),
 });
 
@@ -55,5 +67,7 @@ export const {
     useGetCurrentUserQuery,
     useGetSessionsQuery,
     useLazyGetSessionsQuery,
+    useExchangeGoogleTokenMutation,
+    useGetGoogleConnectionStatusQuery,
 } = authApi;
 

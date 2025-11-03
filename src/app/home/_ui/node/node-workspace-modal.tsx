@@ -23,15 +23,16 @@ import {
   RotateCcw,
   MousePointer,
   Hand,
-    Stethoscope,
-    Heart,
+    Code,
+    BookOpen,
+    GraduationCap,
+    Briefcase,
+    Target,
+    Users,
+    FileText,
+    Presentation,
+    Trophy,
     Brain,
-    Baby,
-    Shield,
-    Activity,
-    Eye,
-    Bone,
-    Pill,
     User,
     Settings,
     Trash2,
@@ -87,7 +88,7 @@ interface NodeWorkspaceModalProps {
 }
 
 // Custom Node Types for React Flow
-interface HealthcareNodeData {
+interface AcademicNodeData {
     label: string
     specialty: string
     description: string
@@ -96,8 +97,8 @@ interface HealthcareNodeData {
     color: string
 }
 
-// Custom Healthcare Node Component - Premium n8n Style
-const HealthcareNodeComponent = ({ data, selected }: { data: HealthcareNodeData, selected?: boolean }) => {
+// Custom Academic Node Component - Premium n8n Style
+const AcademicNodeComponent = ({ data, selected }: { data: AcademicNodeData, selected?: boolean }) => {
     const [isEditing, setIsEditing] = useState(false)
     const [editPriority, setEditPriority] = useState(data.priority)
     const [isHovered, setIsHovered] = useState(false)
@@ -261,44 +262,27 @@ const HealthcareNodeComponent = ({ data, selected }: { data: HealthcareNodeData,
 
 // Node Types Configuration
 const nodeTypes: NodeTypes = {
-    healthcareNode: HealthcareNodeComponent,
+    academicNode: AcademicNodeComponent,
 }
 
-// Icon mapping for specialties
+// Icon mapping for academic/placement specialties
 const specialtyIconMap: Record<string, React.ComponentType<any>> = {
-    general_medicine: Stethoscope,
-    pediatrics: Baby,
-    cardiology: Heart,
-    neurology: Brain,
-    infectious_disease: Shield,
-    emergency_medicine: Activity,
-    dermatology: Eye,
-    orthopedics: Bone,
-    psychiatry: Pill,
-    gastroenterology: Database,
-    endocrinology: Activity,
-    oncology: Shield,
-    pulmonology: Activity,
-    nephrology: Activity,
-    rheumatology: Activity,
-    ophthalmology: Eye,
-    otolaryngology: Activity,
-    anesthesiology: Activity,
-    radiology: Activity,
-    pathology: Activity,
-    surgery: Activity,
-    obstetrics_gynecology: Activity,
-    urology: Activity,
-    plastic_surgery: Activity,
-    forensic_medicine: Activity,
-    sports_medicine: Activity,
-    geriatrics: Activity,
-    occupational_medicine: Activity,
-    public_health: Activity,
+    data_structures_algorithms: Code,
+    system_design: Database,
+    interview_prep: Briefcase,
+    competitive_programming: Trophy,
+    web_development: Webhook,
+    machine_learning: Brain,
+    higher_education: GraduationCap,
+    competitive_exams: Target,
+    resume_building: FileText,
+    soft_skills: Users,
+    // Fallback for any other specialties
+    default: BookOpen,
 }
 
 // Main React Flow Component
-function NodeWorkspaceFlow({ healthcareSpecialists }: { healthcareSpecialists: any[] }) {
+function NodeWorkspaceFlow({ academicSpecialists }: { academicSpecialists: any[] }) {
     const [reactFlowNodes, setReactFlowNodes, onNodesChange] = useNodesState([])
     const [reactFlowEdges, setReactFlowEdges, onEdgesChange] = useEdgesState([])
     const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
@@ -307,10 +291,10 @@ function NodeWorkspaceFlow({ healthcareSpecialists }: { healthcareSpecialists: a
     const [selectedEdges, setSelectedEdges] = useState<string[]>([])
     const [savedConfigurations, setSavedConfigurations] = useState<Array<{ name: string, nodes: Node[], edges: Edge[] }>>([])
 
-    // Convert healthcare specialists to React Flow nodes
+    // Convert academic specialists to React Flow nodes
     const convertToReactFlowNode = (specialist: any, index: number): Node => ({
         id: specialist.id,
-        type: 'healthcareNode',
+        type: 'academicNode',
         position: { x: 100 + (index % 3) * 250, y: 100 + Math.floor(index / 3) * 150 },
         data: {
             label: specialist.label,
@@ -470,7 +454,7 @@ function NodeWorkspaceFlow({ healthcareSpecialists }: { healthcareSpecialists: a
         const specialistId = event.dataTransfer.getData('application/reactflow')
         if (!specialistId) return
 
-        const specialist = healthcareSpecialists.find((s: any) => s.id === specialistId)
+        const specialist = academicSpecialists.find((s: any) => s.id === specialistId)
         if (!specialist) return
 
         const position = reactFlowInstance?.screenToFlowPosition({
@@ -480,7 +464,7 @@ function NodeWorkspaceFlow({ healthcareSpecialists }: { healthcareSpecialists: a
 
         const newNode: Node = {
             id: `${specialist.id}-${Date.now()}`,
-            type: 'healthcareNode',
+            type: 'academicNode',
             position,
             data: {
                 label: specialist.label,
@@ -670,9 +654,9 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
         enabled: !!chatId
     })
 
-    // Convert database nodes to healthcare specialists format
-    const healthcareSpecialists = nodesData?.nodes?.map(node => {
-        const IconComponent = specialtyIconMap[node.specialty] || Stethoscope
+    // Convert database nodes to academic specialists format
+    const academicSpecialists = nodesData?.nodes?.map(node => {
+        const IconComponent = specialtyIconMap[node.specialty] || specialtyIconMap.default || BookOpen
         return {
             id: node.id,
             label: node.name,
@@ -843,7 +827,7 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
                 >
                     {/* Hidden DialogTitle for accessibility */}
                     <DialogTitle className="sr-only">
-                        Healthcare Node Workspace - Build your medical specialist team
+                        Academic Node Workspace - Build your placement & study specialist team
                     </DialogTitle>
                     <div className="flex items-center justify-between h-14 px-6 bg-muted/30 border-b border-border/50">
                         <div className="flex items-center gap-4">
@@ -852,8 +836,8 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
                                     <Workflow className="size-4 text-muted-foreground" />
                                 </div>
                                 <div>
-                                    <span className="text-lg font-semibold text-foreground">Healthcare Node Workspace</span>
-                                    <p className="text-xs text-muted-foreground">Build your medical specialist team</p>
+                                    <span className="text-lg font-semibold text-foreground">Academic Node Workspace</span>
+                                    <p className="text-xs text-muted-foreground">Build your placement & study specialist team</p>
                 </div>
               </div>
                             <div className="h-6 w-px bg-border/50" />
@@ -922,7 +906,7 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
                                                 <div className="text-xs mt-1">Please try again later</div>
                 </div>
               </div>
-                                    ) : healthcareSpecialists.length === 0 ? (
+                                    ) : academicSpecialists.length === 0 ? (
                                         <div className="flex items-center justify-center py-8">
                                             <div className="text-center text-muted-foreground">
                                                 <div className="text-sm">No specialists available</div>
@@ -930,8 +914,8 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
                     </div>
                   </div>
                                     ) : (
-                                        healthcareSpecialists.map((specialist) => (
-                                            <HealthcareNodePaletteItem
+                                        academicSpecialists.map((specialist) => (
+                                            <AcademicNodePaletteItem
                                                 key={specialist.id}
                                                 specialist={specialist}
                                                 onAddToCanvas={() => { }}
@@ -948,7 +932,7 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
 
                         {/* React Flow Canvas */}
                         <ReactFlowProvider>
-                            <NodeWorkspaceFlow healthcareSpecialists={healthcareSpecialists} />
+                            <NodeWorkspaceFlow academicSpecialists={academicSpecialists} />
                         </ReactFlowProvider>
           </div>
 
@@ -981,8 +965,8 @@ export function NodeWorkspaceModal({ isOpen, onClose, chatId }: NodeWorkspaceMod
   )
 }
 
-// Healthcare Node Palette Item Component
-function HealthcareNodePaletteItem({
+// Academic Node Palette Item Component
+function AcademicNodePaletteItem({
     specialist,
     onAddToCanvas,
     isSelected,

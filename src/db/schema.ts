@@ -51,8 +51,20 @@ export const messageSenderEnum = pgEnum("message_sender", ["user", "assistant"])
 export const messageStatusEnum = pgEnum("message_status", ["sent", "delivered", "read", "failed"]);
 export const reactionTypeEnum = pgEnum("reaction_type", ["like", "love", "laugh", "wow", "sad", "angry"]);
 
-// Healthcare Node System enums
+// Academic & Placement Node System enums
 export const specialtyEnum = pgEnum("specialty", [
+	// Academic & Placement Specialties
+	"data_structures_algorithms",
+	"system_design",
+	"interview_prep",
+	"competitive_programming",
+	"web_development",
+	"machine_learning",
+	"higher_education",
+	"competitive_exams",
+	"resume_building",
+	"soft_skills",
+	// Legacy healthcare specialties (kept for backward compatibility)
 	"general_medicine", 
 	"pediatrics", 
 	"cardiology", 
@@ -144,12 +156,12 @@ export const messageReadReceipt = pgTable("message_read_receipt", {
 	createdAt: timestamp("created_at").notNull(),
 });
 
-// Healthcare Specialist Nodes
+// Academic & Placement Specialist Nodes
 export const node = pgTable("node", {
 	id: text("id").primaryKey(), // Unique node ID
-	name: text("name").notNull(), // Display name (e.g., "Pediatric Specialist", "Rabies Expert")
+	name: text("name").notNull(), // Display name (e.g., "DSA Expert", "Interview Prep Coach")
 	description: text("description").notNull(), // Brief description of the specialist's expertise
-	specialty: specialtyEnum("specialty").notNull().default("general_medicine"), // Medical specialty category
+	specialty: specialtyEnum("specialty").notNull().default("general_medicine"), // Academic/career specialty category
 	prompt: text("prompt").notNull(), // The system prompt that defines this specialist's behavior
 	isSystemNode: boolean("is_system_node").notNull().default(true), // System vs user-created nodes
 	isActive: boolean("is_active").notNull().default(true), // Whether this node is available for selection

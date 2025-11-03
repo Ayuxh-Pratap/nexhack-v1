@@ -19,18 +19,19 @@ interface MergedPromptResult {
 }
 
 /**
- * Base healthcare system prompt that provides the foundation
+ * Base academic/placement system prompt that provides the foundation
  */
-const BASE_HEALTHCARE_PROMPT = `You are a qualified medical professional with specialized expertise. You provide accurate, helpful, and professional medical guidance based on your training and experience.
+const BASE_ACADEMIC_PROMPT = `You are an expert academic teacher and career counselor with specialized expertise in placements, higher education, and career development. You provide accurate, helpful, and professional guidance based on your training and experience.
 
 CORE GUIDELINES:
 - Be accurate, evidence-based, and professional
-- Use clear, accessible language appropriate for the user
+- Use clear, accessible language appropriate for students
 - Provide comprehensive but concise responses
-- Draw from your specialized medical knowledge and experience
-- Reference when expertise comes from specific specialties
-- Prioritize patient safety in all recommendations
-- When appropriate, suggest consultation with other specialists for comprehensive care`;
+- Draw from your specialized academic knowledge and industry experience
+- Reference when expertise comes from specific academic/career specialties
+- Prioritize student success and career growth in all recommendations
+- When appropriate, suggest collaboration with other specialists for comprehensive guidance
+- Focus on practical, actionable advice for placements and higher studies`;
 
 /**
  * Merges multiple node prompts into a single cohesive system prompt
@@ -38,7 +39,7 @@ CORE GUIDELINES:
 export function mergeNodePrompts(nodePrompts: NodePromptData[]): MergedPromptResult {
   if (nodePrompts.length === 0) {
     return {
-      systemPrompt: BASE_HEALTHCARE_PROMPT,
+      systemPrompt: BASE_ACADEMIC_PROMPT,
       activeSpecialties: [],
       totalNodes: 0,
       priorityOrder: [],
@@ -55,7 +56,7 @@ export function mergeNodePrompts(nodePrompts: NodePromptData[]): MergedPromptRes
   // Single node - use enhanced individual approach
   if (sortedNodes.length === 1) {
     const node = sortedNodes[0];
-    const systemPrompt = `${BASE_HEALTHCARE_PROMPT}
+    const systemPrompt = `${BASE_ACADEMIC_PROMPT}
 
 SPECIALIST EXPERTISE:
 You are a **${node.name}** with specialized knowledge and experience in ${node.specialty}. You have extensive training and expertise in this field.
@@ -63,11 +64,11 @@ You are a **${node.name}** with specialized knowledge and experience in ${node.s
 ${node.prompt}
 
 When responding:
-- Act as the specialist you are - provide expert medical guidance from your ${node.specialty} perspective
-- Draw primarily from your specialized knowledge and clinical experience
-- Be confident in your expertise while remaining professional
-- Provide specific, actionable medical advice based on your specialty
-- Suggest consultation with other specialists only when the case falls outside your expertise`;
+- Act as the specialist you are - provide expert academic/career guidance from your ${node.specialty} perspective
+- Draw primarily from your specialized knowledge and teaching/industry experience
+- Be confident in your expertise while remaining professional and encouraging
+- Provide specific, actionable advice based on your specialty (academic concepts, placement prep, etc.)
+- Suggest collaboration with other specialists only when the topic falls outside your expertise`;
 
     return {
       systemPrompt,
@@ -87,10 +88,10 @@ ${node.prompt}`;
   const specialtyNames = sortedNodes.map(node => node.name).join(', ');
   const primarySpecialty = sortedNodes[0];
 
-  const systemPrompt = `${BASE_HEALTHCARE_PROMPT}
+  const systemPrompt = `${BASE_ACADEMIC_PROMPT}
 
-MULTI-SPECIALTY EXPERTISE:
-You are a comprehensive medical team combining expertise from ${sortedNodes.length} specialists: ${specialtyNames}. You have extensive training and experience across these specialties.
+MULTI-SPECIALTY ACADEMIC EXPERTISE:
+You are a comprehensive academic team combining expertise from ${sortedNodes.length} specialists: ${specialtyNames}. You have extensive training and experience across these academic and career specialties.
 
 Your active specialties include:
 ${specialtyBlocks}
@@ -100,16 +101,16 @@ MULTI-SPECIALTY RESPONSE GUIDELINES:
 - **Secondary Expertise**: Integrate relevant knowledge from your other active specialties when applicable
 - **Specialty Attribution**: Clearly indicate which specialty area informs each part of your response (e.g., "From a ${primarySpecialty.specialty} perspective..." or "The ${sortedNodes[1]?.specialty} approach would be...")
 - **Collaborative Approach**: When multiple specialties are relevant, present a comprehensive view that integrates different perspectives
-- **Expert Confidence**: Act as the medical professional you are - provide specific, actionable medical advice based on your combined expertise
-- **Scope Awareness**: Stay within the combined scope of your active specialties and refer to other specialists only when the case falls outside your expertise
+- **Expert Confidence**: Act as the academic professional you are - provide specific, actionable advice based on your combined expertise
+- **Scope Awareness**: Stay within the combined scope of your active specialties and refer to other specialists only when the topic falls outside your expertise
 
 RESPONSE FORMAT:
-When providing medical guidance:
+When providing academic/career guidance:
 1. Lead with your primary specialty perspective (${primarySpecialty.specialty})
 2. Include relevant insights from secondary specialties when applicable
 3. Clearly attribute advice to specific specialty areas
 4. Provide integrated recommendations that consider all active specialties
-5. Be confident in your medical expertise while remaining professional`;
+5. Be confident in your academic expertise while remaining professional and encouraging`;
 
   return {
     systemPrompt,
@@ -120,7 +121,7 @@ When providing medical guidance:
 }
 
 /**
- * Creates a context-aware prompt for specific medical queries
+ * Creates a context-aware prompt for specific academic/career queries
  */
 export function createContextualPrompt(
   nodePrompts: NodePromptData[],
@@ -159,9 +160,9 @@ export function createContextualPrompt(
   const contextualEnhancement = `
 QUERY-SPECIFIC GUIDANCE:
 Based on the user's query, **${mostRelevantSpecialty.name}** appears most relevant. While maintaining your multi-specialty approach:
-- Lead with your ${mostRelevantSpecialty.specialty} expertise and provide specific medical guidance
+- Lead with your ${mostRelevantSpecialty.specialty} expertise and provide specific academic/career guidance
 - Consider how other active specialties might contribute to a comprehensive answer
-- Act as the medical professional you are - provide expert advice based on your training and experience
+- Act as the academic professional you are - provide expert advice based on your training and experience
 - If the query falls outside all active specialties, clearly state this and suggest appropriate specialist consultation`;
 
   return {
@@ -172,19 +173,20 @@ Based on the user's query, **${mostRelevantSpecialty.name}** appears most releva
 }
 
 /**
- * Basic specialty relevance checker
+ * Basic specialty relevance checker for academic/career specialties
  */
 function isQueryRelevantToSpecialty(query: string, specialty: string): boolean {
   const specialtyKeywords: Record<string, string[]> = {
-    pediatrics: ['child', 'children', 'baby', 'infant', 'toddler', 'kid', 'pediatric', 'vaccination', 'growth', 'development'],
-    cardiology: ['heart', 'cardiac', 'chest pain', 'blood pressure', 'hypertension', 'arrhythmia', 'ecg', 'ekg'],
-    infectious_disease: ['infection', 'fever', 'bacteria', 'virus', 'antibiotic', 'contagious', 'rabies', 'vaccination', 'immune'],
-    emergency_medicine: ['emergency', 'urgent', 'accident', 'trauma', 'poisoning', 'overdose', 'first aid', 'critical'],
-    neurology: ['brain', 'neurological', 'seizure', 'headache', 'stroke', 'memory', 'numbness', 'paralysis'],
-    dermatology: ['skin', 'rash', 'acne', 'dermatitis', 'mole', 'itching', 'allergic reaction'],
-    orthopedics: ['bone', 'joint', 'fracture', 'sprain', 'muscle', 'back pain', 'arthritis', 'sports injury'],
-    psychiatry: ['mental', 'depression', 'anxiety', 'stress', 'therapy', 'medication', 'psychological', 'behavioral'],
-    gastroenterology: ['stomach', 'digestive', 'nausea', 'diarrhea', 'constipation', 'abdominal', 'liver', 'intestinal'],
+    data_structures_algorithms: ['dsa', 'data structure', 'algorithm', 'leetcode', 'coding', 'array', 'tree', 'graph', 'dp', 'dynamic programming', 'binary search', 'sorting'],
+    system_design: ['system design', 'architecture', 'scalability', 'microservices', 'database design', 'distributed', 'load balancing', 'caching'],
+    interview_prep: ['interview', 'technical interview', 'coding interview', 'hr interview', 'mock interview', 'placement', 'hiring'],
+    competitive_programming: ['competitive', 'codechef', 'codeforces', 'hackerrank', 'spoj', 'icpc', 'contest', 'cp'],
+    web_development: ['web dev', 'frontend', 'backend', 'react', 'node', 'javascript', 'full stack', 'api', 'rest'],
+    machine_learning: ['ml', 'machine learning', 'deep learning', 'neural network', 'ai', 'artificial intelligence', 'model', 'training'],
+    higher_education: ['masters', 'phd', 'graduate', 'university', 'admission', 'sop', 'statement of purpose', 'lor', 'recommendation'],
+    competitive_exams: ['gate', 'cat', 'gre', 'toefl', 'ielts', 'exam', 'entrance', 'preparation', 'syllabus'],
+    resume_building: ['resume', 'cv', 'portfolio', 'projects', 'experience', 'skills', 'achievements'],
+    soft_skills: ['communication', 'leadership', 'teamwork', 'presentation', 'negotiation', 'interpersonal'],
   };
 
   const keywords = specialtyKeywords[specialty] || [];

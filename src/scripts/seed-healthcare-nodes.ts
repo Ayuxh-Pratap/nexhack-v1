@@ -1,5 +1,5 @@
 /**
- * Script to seed initial healthcare specialist nodes
+ * Script to seed initial academic & placement specialist nodes
  * Run this script to populate the database with system nodes
  * 
  * Usage: npx ts-node src/scripts/seed-healthcare-nodes.ts
@@ -11,10 +11,10 @@ import 'dotenv/config';
 import { db } from "@/db";
 import { node } from "@/db/schema";
 import { prepareNodeSeedData } from "@/db/seed-nodes";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
-async function seedHealthcareNodes() {
-  console.log("🏥 Starting healthcare nodes seeding...");
+async function seedAcademicNodes() {
+  console.log("📚 Starting academic & placement nodes seeding...");
   
   try {
     const seedData = prepareNodeSeedData();
@@ -46,14 +46,14 @@ async function seedHealthcareNodes() {
     
     // List all specialties
     const specialties = [...new Set(seedData.map(n => n.specialty))];
-    console.log(`\n🔬 Available specialties:`);
+    console.log(`\n📖 Available specialties:`);
     specialties.forEach(specialty => {
       const count = seedData.filter(n => n.specialty === specialty).length;
       console.log(`   - ${specialty}: ${count} node(s)`);
     });
 
   } catch (error) {
-    console.error("❌ Error seeding healthcare nodes:", error);
+    console.error("❌ Error seeding academic nodes:", error);
     process.exit(1);
   }
 }
@@ -73,18 +73,34 @@ async function listExistingNodes() {
 
     existingNodes.forEach(node => {
       const status = node.isActive ? "🟢" : "🔴";
-      const type = node.isSystemNode ? "🏥" : "👤";
+      const type = node.isSystemNode ? "📚" : "👤";
       console.log(`   ${status} ${type} ${node.name} (${node.specialty})`);
     });
 
     console.log(`\n   Total: ${existingNodes.length} nodes`);
     console.log(`   🟢 Active: ${existingNodes.filter(n => n.isActive).length}`);
     console.log(`   🔴 Inactive: ${existingNodes.filter(n => !n.isActive).length}`);
-    console.log(`   🏥 System: ${existingNodes.filter(n => n.isSystemNode).length}`);
+    console.log(`   📚 System: ${existingNodes.filter(n => n.isSystemNode).length}`);
     console.log(`   👤 User-created: ${existingNodes.filter(n => !n.isSystemNode).length}`);
 
   } catch (error) {
     console.error("❌ Error listing existing nodes:", error);
+  }
+}
+
+async function deleteOldSystemNodes() {
+  console.log("🗑️  Deleting old system nodes...");
+  
+  try {
+    // Delete all system nodes (these are the old healthcare nodes)
+    const result = await db.delete(node)
+      .where(eq(node.isSystemNode, true));
+    
+    console.log("✅ Deleted all old system nodes");
+    console.log("   You can now run 'seed' to add new academic nodes");
+  } catch (error) {
+    console.error("❌ Error deleting old nodes:", error);
+    process.exit(1);
   }
 }
 
@@ -95,9 +111,13 @@ async function main() {
     case 'list':
       await listExistingNodes();
       break;
+    case 'delete':
+      await deleteOldSystemNodes();
+      await listExistingNodes();
+      break;
     case 'seed':
     default:
-      await seedHealthcareNodes();
+      await seedAcademicNodes();
       await listExistingNodes();
       break;
   }
@@ -110,4 +130,4 @@ if (require.main === module) {
   main();
 }
 
-export { seedHealthcareNodes, listExistingNodes };
+export { seedAcademicNodes, listExistingNodes };

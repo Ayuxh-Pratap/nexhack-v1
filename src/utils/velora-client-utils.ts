@@ -23,31 +23,21 @@ export function prepareVeloraAIRequest(
     ...config
   };
 
-  // If in study mode, add a flag to use Velora teacher prompt
-  if (config?.isStudyMode) {
-    return {
-      messages,
-      config: {
-        ...baseConfig,
-        useVeloraMode: true // Flag for backend to use Velora system prompt
-      }
-    };
-  }
+  // Velora teacher mode is now default for all conversations
+  // Priority: Node-based > Velora mode > Default
+  const finalConfig: any = {
+    ...baseConfig,
+    useVeloraMode: true // Always use Velora teacher prompt by default
+  };
 
-  // If in node mode, enable node-based prompting
+  // If in node mode, enable node-based prompting (takes priority)
   if (config?.useNodeBasedPrompting && config?.chatId) {
-    return {
-      messages,
-      config: {
-        ...baseConfig,
-        chatId: config.chatId,
-        useNodeBasedPrompting: true // Flag for backend to use node-based prompting
-      }
-    };
+    finalConfig.chatId = config.chatId;
+    finalConfig.useNodeBasedPrompting = true; // This will override Velora mode in AI router
   }
 
   return {
     messages,
-    config: baseConfig
+    config: finalConfig
   };
 }

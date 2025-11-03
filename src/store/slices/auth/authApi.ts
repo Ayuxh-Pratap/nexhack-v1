@@ -22,8 +22,8 @@ export const authApi = createApi({
     tagTypes: ["Auth"],
     endpoints: (builder) => ({
         // Authenticate user with Firebase token
-        // user_type is passed as query parameter (teacher or student)
-        authenticate: builder.mutation<AuthResponse, { user_type: "teacher" | "student"; body: AuthRequest }>({
+        // user_type is passed as query parameter (teacher or user)
+        authenticate: builder.mutation<AuthResponse, { user_type: "teacher" | "user"; body: AuthRequest }>({
             query: ({ user_type, body }) => ({
                 url: "/auth",
                 method: "POST",

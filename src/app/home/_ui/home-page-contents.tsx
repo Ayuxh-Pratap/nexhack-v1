@@ -54,6 +54,11 @@ export const HomePageContents = () => {
     };
   }, [authUser]);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Auth state:', { authUser, authLoading, user });
+  }, [authUser, authLoading, user]);
+
   // Get courses from store
   const { courses, getCourseById } = useCourseData();
   
@@ -222,7 +227,14 @@ export const HomePageContents = () => {
         </div>
 
         <TabsContent value="course" className="flex-1 mt-0 p-0" style={{ paddingTop: 'calc(var(--header-height) + 1rem)' }}>
-          {user ? (
+          {authLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center space-y-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground">Loading user data...</p>
+              </div>
+            </div>
+          ) : user ? (
             <CourseOvaContainer 
               user={user} 
               course={selectedCourse}
@@ -230,8 +242,9 @@ export const HomePageContents = () => {
             />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-muted-foreground">Loading user data...</p>
+              <div className="text-center space-y-2">
+                <p className="text-muted-foreground">No user data available</p>
+                <p className="text-sm text-muted-foreground">Please try logging in again</p>
               </div>
             </div>
           )}

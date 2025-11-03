@@ -19,7 +19,7 @@ export function LoginPageContent() {
     const dispatch = useAppDispatch();
     const { isAuthenticated, isLoading: authLoading } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
-    const [role, setRole] = useState<UserRole>("student");
+    const [role, setRole] = useState<UserRole>("user");
     const [isSignUp, setIsSignUp] = useState(false);
     
     // Form state
@@ -51,21 +51,33 @@ export function LoginPageContent() {
 
         setIsLoading(true);
         try {
+            let result;
             if (isSignUp) {
-                await dispatch(
+                result = await dispatch(
                     signUpWithEmail({ email, password, name, role })
                 ).unwrap();
                 toast.success(`Welcome! Account created as ${role}.`);
             } else {
-                await dispatch(
+                result = await dispatch(
                     signInWithEmail({ email, password, role })
                 ).unwrap();
                 toast.success("Signed in successfully!");
             }
-            router.push("/home");
+            
+            // Wait a bit for Redux state to update
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Check if authentication was successful
+            if (result && result.user) {
+                // Use window.location for reliable redirect
+                window.location.href = "/home";
+            } else {
+                throw new Error("Authentication incomplete");
+            }
         } catch (error: any) {
-            toast.error(error || "Authentication failed");
-        } finally {
+            console.error("Email auth error:", error);
+            const errorMessage = error?.message || error?.data?.message || error || "Authentication failed";
+            toast.error(errorMessage);
             setIsLoading(false);
         }
     };
@@ -73,12 +85,23 @@ export function LoginPageContent() {
     const handleGoogleAuth = async () => {
         setIsLoading(true);
         try {
-            await dispatch(signInWithGoogle(role)).unwrap();
-            toast.success("Signed in with Google!");
-            router.push("/home");
+            const result = await dispatch(signInWithGoogle(role)).unwrap();
+            
+            // Wait a bit for Redux state to update
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Check if authentication was successful
+            if (result && result.user) {
+                toast.success("Signed in with Google!");
+                // Use window.location for reliable redirect
+                window.location.href = "/home";
+            } else {
+                throw new Error("Authentication incomplete");
+            }
         } catch (error: any) {
-            toast.error(error || "Google sign-in failed");
-        } finally {
+            console.error("Google sign-in error:", error);
+            const errorMessage = error?.message || error?.data?.message || error || "Google sign-in failed";
+            toast.error(errorMessage);
             setIsLoading(false);
         }
     };
@@ -108,12 +131,12 @@ export function LoginPageContent() {
                     <div className="grid grid-cols-2 gap-2">
                         <Button
                             type="button"
-                            variant={role === "student" ? "default" : "outline"}
-                            onClick={() => setRole("student")}
+                            variant={role === "user" ? "default" : "outline"}
+                            onClick={() => setRole("user")}
                             disabled={isLoading}
                             className="w-full"
                         >
-                            Student
+                            User
                         </Button>
                         <Button
                             type="button"

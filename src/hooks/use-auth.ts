@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { checkAuthState } from "@/store/slices/auth/authThunks";
 import type { UserRole } from "@/types/auth";
@@ -12,11 +12,16 @@ import type { UserRole } from "@/types/auth";
 export const useAuth = () => {
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
+    const hasCheckedRef = useRef(false);
 
-    // Check auth state on mount
+    // Check auth state on mount (only once)
     useEffect(() => {
-        dispatch(checkAuthState());
-    }, [dispatch]);
+        // Only check if we haven't checked before and user is not already set
+        if (!hasCheckedRef.current && !authState.user && authState.isLoading) {
+            hasCheckedRef.current = true;
+            dispatch(checkAuthState());
+        }
+    }, [dispatch, authState.user, authState.isLoading]);
 
     return {
         user: authState.user,

@@ -1,5 +1,5 @@
 // User roles
-export type UserRole = "teacher" | "student";
+export type UserRole = "teacher" | "user";
 
 // Auth types
 export interface User {

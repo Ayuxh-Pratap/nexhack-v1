@@ -11,7 +11,7 @@ interface LoginButtonsProps {
   role?: UserRole;
 }
 
-export const LoginButtons = ({ role = "student" }: LoginButtonsProps) => {
+export const LoginButtons = ({ role = "user" }: LoginButtonsProps) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 

@@ -42,7 +42,7 @@ export async function getSession(): Promise<{ user: User } | null> {
                 name: data.user?.name || data.name,
                 avatar: data.user?.avatar || data.avatar,
                 emailVerified: data.user?.emailVerified || data.emailVerified || false,
-                role: (data.user?.user_type || data.user?.role || data.user_type || data.role || "student") as "teacher" | "student",
+                role: (data.user?.user_type || data.user?.role || data.user_type || data.role || "user") as "teacher" | "user",
             };
 
             return { user };
@@ -61,7 +61,7 @@ export async function getSession(): Promise<{ user: User } | null> {
  * Note: This should use the /auth endpoint with user_type query parameter
  * For now, this is a placeholder - actual implementation should use the authenticate endpoint
  */
-export async function verifyFirebaseToken(token: string, userType: "teacher" | "student" = "student"): Promise<User | null> {
+export async function verifyFirebaseToken(token: string, userType: "teacher" | "user" = "user"): Promise<User | null> {
     try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;

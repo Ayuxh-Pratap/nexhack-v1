@@ -24,7 +24,7 @@ export const LoginMenu = ({ variant = "default" }: LoginMenuProps) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const handleGoogleSignIn = async (role: UserRole = "student") => {
+  const handleGoogleSignIn = async (role: UserRole = "user") => {
     try {
       await dispatch(signInWithGoogle(role)).unwrap();
       toast.success("Signed in with Google!");
@@ -35,7 +35,7 @@ export const LoginMenu = ({ variant = "default" }: LoginMenuProps) => {
     }
   };
 
-  const signinWithGoogle = () => handleGoogleSignIn("student");
+  const signinWithGoogle = () => handleGoogleSignIn("user");
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -72,15 +72,15 @@ export const LoginMenu = ({ variant = "default" }: LoginMenuProps) => {
         {/* Login Options */}
         <div className="space-y-1">
           <DropdownMenuItem 
-            onClick={() => handleGoogleSignIn("student")}
+            onClick={() => handleGoogleSignIn("user")}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-neutral-800/50 hover:text-neutral-100 transition-all duration-200 cursor-pointer group"
           >
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white group-hover:bg-blue-50 transition-all duration-200">
               <FcGoogle className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-neutral-100">Continue as Student</span>
-              <span className="text-xs text-neutral-500">Sign in with Google as student</span>
+              <span className="text-sm font-medium text-neutral-100">Continue as User</span>
+              <span className="text-xs text-neutral-500">Sign in with Google as user</span>
             </div>
           </DropdownMenuItem>
 

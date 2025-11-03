@@ -46,15 +46,42 @@ export const signInWithGoogle = createAsyncThunk(
             const deviceData = await getDeviceData();
 
             // Authenticate with backend API
-            const authResult = await dispatch(
-                authApi.endpoints.authenticate.initiate({
-                    user_type: role,
-                    body: {
-                        firebase_token: firebaseToken,
-                        device_data: deviceData,
-                    },
-                })
-            ).unwrap();
+            let authResult;
+            try {
+                authResult = await dispatch(
+                    authApi.endpoints.authenticate.initiate({
+                        user_type: role,
+                        body: {
+                            firebase_token: firebaseToken,
+                            device_data: deviceData,
+                        },
+                    })
+                ).unwrap();
+            } catch (apiError: any) {
+                // Log the error for debugging
+                console.error("Backend authentication error:", apiError);
+                
+                // If API URL is not set or API is not available, still allow login
+                // User will be authenticated with Firebase, backend token will be null
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                if (!apiUrl) {
+                    console.warn("NEXT_PUBLIC_API_URL not set - skipping backend authentication");
+                    // Still allow login with Firebase token only
+                    tokenService.setTokens(firebaseToken, "");
+                    dispatch(setUser(user));
+                    dispatch(setFirebaseToken(firebaseToken));
+                    dispatch(setBackendToken(null));
+                    dispatch(setLoading(false));
+                    return { user, firebaseToken, backendToken: null };
+                }
+                
+                // Re-throw the error if API URL is set (backend should be available)
+                throw apiError;
+            }
+
+            if (!authResult || !authResult.access_token) {
+                throw new Error("Backend authentication failed: No access token received");
+            }
 
             const backendToken = authResult.access_token;
 
@@ -106,15 +133,42 @@ export const signUpWithEmail = createAsyncThunk(
             const deviceData = await getDeviceData();
 
             // Authenticate with backend API
-            const authResult = await dispatch(
-                authApi.endpoints.authenticate.initiate({
-                    user_type: role,
-                    body: {
-                        firebase_token: firebaseToken,
-                        device_data: deviceData,
-                    },
-                })
-            ).unwrap();
+            let authResult;
+            try {
+                authResult = await dispatch(
+                    authApi.endpoints.authenticate.initiate({
+                        user_type: role,
+                        body: {
+                            firebase_token: firebaseToken,
+                            device_data: deviceData,
+                        },
+                    })
+                ).unwrap();
+            } catch (apiError: any) {
+                // Log the error for debugging
+                console.error("Backend authentication error:", apiError);
+                
+                // If API URL is not set or API is not available, still allow login
+                // User will be authenticated with Firebase, backend token will be null
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                if (!apiUrl) {
+                    console.warn("NEXT_PUBLIC_API_URL not set - skipping backend authentication");
+                    // Still allow login with Firebase token only
+                    tokenService.setTokens(firebaseToken, "");
+                    dispatch(setUser(user));
+                    dispatch(setFirebaseToken(firebaseToken));
+                    dispatch(setBackendToken(null));
+                    dispatch(setLoading(false));
+                    return { user, firebaseToken, backendToken: null };
+                }
+                
+                // Re-throw the error if API URL is set (backend should be available)
+                throw apiError;
+            }
+
+            if (!authResult || !authResult.access_token) {
+                throw new Error("Backend authentication failed: No access token received");
+            }
 
             const backendToken = authResult.access_token;
 
@@ -160,15 +214,42 @@ export const signInWithEmail = createAsyncThunk(
             const deviceData = await getDeviceData();
 
             // Authenticate with backend API
-            const authResult = await dispatch(
-                authApi.endpoints.authenticate.initiate({
-                    user_type: role,
-                    body: {
-                        firebase_token: firebaseToken,
-                        device_data: deviceData,
-                    },
-                })
-            ).unwrap();
+            let authResult;
+            try {
+                authResult = await dispatch(
+                    authApi.endpoints.authenticate.initiate({
+                        user_type: role,
+                        body: {
+                            firebase_token: firebaseToken,
+                            device_data: deviceData,
+                        },
+                    })
+                ).unwrap();
+            } catch (apiError: any) {
+                // Log the error for debugging
+                console.error("Backend authentication error:", apiError);
+                
+                // If API URL is not set or API is not available, still allow login
+                // User will be authenticated with Firebase, backend token will be null
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                if (!apiUrl) {
+                    console.warn("NEXT_PUBLIC_API_URL not set - skipping backend authentication");
+                    // Still allow login with Firebase token only
+                    tokenService.setTokens(firebaseToken, "");
+                    dispatch(setUser(user));
+                    dispatch(setFirebaseToken(firebaseToken));
+                    dispatch(setBackendToken(null));
+                    dispatch(setLoading(false));
+                    return { user, firebaseToken, backendToken: null };
+                }
+                
+                // Re-throw the error if API URL is set (backend should be available)
+                throw apiError;
+            }
+
+            if (!authResult || !authResult.access_token) {
+                throw new Error("Backend authentication failed: No access token received");
+            }
 
             const backendToken = authResult.access_token;
 
@@ -221,58 +302,98 @@ export const signOut = createAsyncThunk(
 export const checkAuthState = createAsyncThunk(
     "auth/checkAuthState",
     async (_, { dispatch }) => {
-        return new Promise<{ user: User | null; firebaseToken: string | null }>((resolve) => {
+        return new Promise<{ user: User | null; firebaseToken: string | null }>((resolve, reject) => {
             dispatch(setLoading(true));
 
-            onAuthStateChanged(auth, async (firebaseUser) => {
+            // Use onAuthStateChanged to listen for auth state changes
+            const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
                 try {
-                        if (firebaseUser) {
+                    if (firebaseUser) {
                         const firebaseToken = await firebaseUser.getIdToken();
-                        // Get role from custom claims or default to student
+                        // Get role from custom claims or default to user
                         const tokenResult = await firebaseUser.getIdTokenResult();
-                        const role = (tokenResult.claims.role as UserRole) || "student";
+                        const role = (tokenResult.claims.role as UserRole) || "user";
                         const user = firebaseUserToUser(firebaseUser, role);
 
                         // Get stored backend token
                         const backendToken = tokenService.getBackendToken();
 
                         if (backendToken) {
+                            // User is authenticated and has backend token
                             dispatch(setUser(user));
                             dispatch(setFirebaseToken(firebaseToken));
                             dispatch(setBackendToken(backendToken));
+                            dispatch(setLoading(false));
+                            // Unsubscribe after first check to prevent multiple calls
+                            unsubscribe();
+                            resolve({ user, firebaseToken });
                         } else {
                             // Authenticate with backend if backend token missing
-                            // Get device data (async - FCM token may take time)
-                            const deviceData = await getDeviceData();
-                            
-                            const authResult = await dispatch(
-                                authApi.endpoints.authenticate.initiate({
-                                    user_type: role,
-                                    body: {
-                                        firebase_token: firebaseToken,
-                                        device_data: deviceData,
-                                    },
-                                })
-                            ).unwrap();
+                            try {
+                                // Get device data (async - FCM token may take time)
+                                const deviceData = await getDeviceData();
+                                
+                                const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                                if (!apiUrl) {
+                                    // No API URL - allow login with Firebase token only
+                                    console.warn("NEXT_PUBLIC_API_URL not set - using Firebase token only");
+                                    tokenService.setTokens(firebaseToken, "");
+                                    dispatch(setUser(user));
+                                    dispatch(setFirebaseToken(firebaseToken));
+                                    dispatch(setBackendToken(null));
+                                    dispatch(setLoading(false));
+                                    unsubscribe();
+                                    resolve({ user, firebaseToken });
+                                    return;
+                                }
 
-                            const newBackendToken = authResult.access_token;
-                            tokenService.setTokens(firebaseToken, newBackendToken);
-                            dispatch(setBackendToken(newBackendToken));
-                            dispatch(setUser(user));
-                            dispatch(setFirebaseToken(firebaseToken));
+                                const authResult = await dispatch(
+                                    authApi.endpoints.authenticate.initiate({
+                                        user_type: role,
+                                        body: {
+                                            firebase_token: firebaseToken,
+                                            device_data: deviceData,
+                                        },
+                                    })
+                                ).unwrap();
+
+                                if (!authResult || !authResult.access_token) {
+                                    throw new Error("Backend authentication failed: No access token received");
+                                }
+
+                                const newBackendToken = authResult.access_token;
+                                tokenService.setTokens(firebaseToken, newBackendToken);
+                                dispatch(setBackendToken(newBackendToken));
+                                dispatch(setUser(user));
+                                dispatch(setFirebaseToken(firebaseToken));
+                                dispatch(setLoading(false));
+                                unsubscribe();
+                                resolve({ user, firebaseToken });
+                            } catch (apiError: any) {
+                                console.error("Backend authentication error:", apiError);
+                                // Still allow login with Firebase token only
+                                tokenService.setTokens(firebaseToken, "");
+                                dispatch(setUser(user));
+                                dispatch(setFirebaseToken(firebaseToken));
+                                dispatch(setBackendToken(null));
+                                dispatch(setLoading(false));
+                                unsubscribe();
+                                resolve({ user, firebaseToken });
+                            }
                         }
-
-                        dispatch(setLoading(false));
-                        resolve({ user, firebaseToken });
                     } else {
                         // User not signed in
                         dispatch(clearAuth());
                         dispatch(setLoading(false));
+                        unsubscribe();
                         resolve({ user: null, firebaseToken: null });
                     }
                 } catch (error: any) {
+                    console.error("Auth check error:", error);
                     dispatch(setLoading(false));
                     dispatch(setError(error?.message || "Auth check failed"));
+                    unsubscribe();
+                    // Still resolve to allow UI to render
                     resolve({ user: null, firebaseToken: null });
                 }
             });

@@ -31,7 +31,7 @@ const generateMockCourses = (): Course[] => {
     const courses: Course[] = [
         {
             id: "course-1",
-            title: "Complete React Development Course",
+            title: "Complete React Development",
             description: "Master React from basics to advanced concepts. Build real-world applications and learn hooks, context, and modern patterns.",
             instructor: {
                 id: "instructor-1",

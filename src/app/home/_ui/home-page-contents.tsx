@@ -44,8 +44,23 @@ export const HomePageContents = () => {
   const { data: user } = useSuspenseQuery(trpc.user.getProfile.queryOptions());
 
   // Get courses from store
-  const { courses } = useCourseData();
-  const selectedCourse = courses[0]; // Use first course by default
+  const { courses, getCourseById } = useCourseData();
+  
+  // Get course from URL parameter or use first course by default
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Check for course ID in URL params
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get('course');
+    if (courseId) {
+      setSelectedCourseId(courseId);
+    }
+  }, []);
+
+  const selectedCourse = selectedCourseId 
+    ? getCourseById(selectedCourseId) || courses[0]
+    : courses[0];
 
   // Debug useEffect to monitor mode state changes
   useEffect(() => {
@@ -162,7 +177,7 @@ export const HomePageContents = () => {
     <>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full relative">
         <div className="sticky z-50 w-fit mx-auto" style={{ top: 'calc(var(--header-height) + 1rem)' }}>
-          <TabsList className="h-12 bg-muted/30 p-1 rounded-lg gap-1 border border-border/50">
+          <TabsList className="h-12 bg-muted/80 backdrop-blur-md p-1 rounded-lg gap-1 border border-border shadow-lg">
             <TabsTrigger 
               value="course" 
               className="px-5 py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground rounded-md transition-all duration-200 shadow-sm data-[state=active]:shadow-md font-medium"

@@ -26,9 +26,9 @@ export function prepareVeloraAIRequest(
   // Velora teacher mode is now default for all conversations
   // Priority: Node-based > Velora mode > Default
   const finalConfig: any = {
-    ...baseConfig,
+        ...baseConfig,
     useVeloraMode: true // Always use Velora teacher prompt by default
-  };
+    };
 
   // If in node mode, enable node-based prompting (takes priority)
   if (config?.useNodeBasedPrompting && config?.chatId) {

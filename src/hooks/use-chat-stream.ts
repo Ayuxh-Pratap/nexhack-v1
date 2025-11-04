@@ -20,12 +20,7 @@ export const useChatStream = (options?: UseChatStreamOptions) => {
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const sendMessage = useCallback(
-        async (
-            query: string, 
-            lecture_id?: string | null,
-            chatId?: string | null,
-            useNodeBasedPrompting?: boolean
-        ) => {
+        async (query: string, video_url?: string | null) => {
             if (isStreaming) {
                 console.warn("Already streaming, please wait...");
                 return;
@@ -51,19 +46,13 @@ export const useChatStream = (options?: UseChatStreamOptions) => {
                 // Remove trailing slash from API URL to avoid double slashes
                 apiUrl = apiUrl.replace(/\/+$/, "");
 
-                // Build query parameters - URLSearchParams automatically encodes values
+                // Build query parameters
                 const params = new URLSearchParams();
                 params.append("query", query.trim());
-                if (lecture_id) {
-                    params.append("lecture_id", lecture_id);
-                }
-                if (chatId) {
-                    params.append("chat_id", chatId);
-                }
-                // Only pass use_node_based_prompting when explicitly enabled (node mode)
-                // When false/undefined, backend will use default (Velora mode)
-                if (useNodeBasedPrompting === true) {
-                    params.append("use_node_based_prompting", "true");
+                
+                // Add video_url if provided (YouTube link of the lecture)
+                if (video_url) {
+                    params.append("video_url", video_url);
                 }
 
                 // Make request with streaming

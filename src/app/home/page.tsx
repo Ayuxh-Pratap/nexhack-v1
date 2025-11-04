@@ -6,13 +6,13 @@ import { AuthGuard } from "./_ui/auth-guard";
 
 const HomePage = async () => {
   return (
-    <ErrorBoundary fallback={<div>There was an error</div>}>
-      <Suspense fallback={<div>Loading...</div>}>
+      <ErrorBoundary fallback={<div>There was an error</div>}>
+        <Suspense fallback={<div>Loading...</div>}>
         <AuthGuard>
           <HomePageContents/>
         </AuthGuard>
-      </Suspense>
-    </ErrorBoundary>
+        </Suspense>
+      </ErrorBoundary>
   );
 };
 

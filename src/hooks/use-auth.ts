@@ -19,7 +19,7 @@ export const useAuth = () => {
         // Only check if we haven't checked before and user is not already set
         if (!hasCheckedRef.current && !authState.user && authState.isLoading) {
             hasCheckedRef.current = true;
-            dispatch(checkAuthState());
+        dispatch(checkAuthState());
         }
     }, [dispatch, authState.user, authState.isLoading]);
 

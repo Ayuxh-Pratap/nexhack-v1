@@ -51,7 +51,7 @@ const generateMockCourses = (): Course[] => {
                     course_id: "course-1",
                     title: "Introduction to React",
                     description: "Learn the fundamentals of React and why it's the most popular library for building user interfaces.",
-                    video_url: "https://youtu.be/SR5NYCdzKkc?si=mHhHkg4U09Vz7Cgr",
+                    video_url: "https://youtu.be/-6LvNku2nJE?si=QAiynXNmW7iEMz20",
                     duration: 1200, // 20 minutes
                     order: 1,
                     created_at: new Date().toISOString(),
@@ -72,7 +72,7 @@ const generateMockCourses = (): Course[] => {
                     course_id: "course-1",
                     title: "Components and Props",
                     description: "Understand how to create reusable components and pass data using props.",
-                    video_url: "https://youtu.be/SR5NYCdzKkc?si=mHhHkg4U09Vz7Cgr",
+                    video_url: "https://youtu.be/k3KqQvywToE?si=PktCHlErRiXMQFlp",
                     duration: 1800, // 30 minutes
                     order: 2,
                     created_at: new Date().toISOString(),
@@ -83,7 +83,7 @@ const generateMockCourses = (): Course[] => {
                     course_id: "course-1",
                     title: "State and Hooks",
                     description: "Master useState and useEffect hooks to manage component state and side effects.",
-                    video_url: "https://youtu.be/SR5NYCdzKkc?si=mHhHkg4U09Vz7Cgr",
+                    video_url: "https://youtu.be/yNbnA5pryMg?si=VXQkQda0n7Gz3pXh",
                     duration: 2400, // 40 minutes
                     order: 3,
                     created_at: new Date().toISOString(),
@@ -94,7 +94,7 @@ const generateMockCourses = (): Course[] => {
                     course_id: "course-1",
                     title: "Context API",
                     description: "Learn how to use Context API to manage global state without prop drilling.",
-                    video_url: "https://youtu.be/SR5NYCdzKkc?si=mHhHkg4U09Vz7Cgr",
+                    video_url: "https://youtu.be/kAOuj6o7Kxs?si=TZ3PNhyGl2LcBpco",
                     duration: 1500, // 25 minutes
                     order: 4,
                     created_at: new Date().toISOString(),
@@ -105,7 +105,7 @@ const generateMockCourses = (): Course[] => {
                     course_id: "course-1",
                     title: "Building Your First App",
                     description: "Put everything together and build a complete React application.",
-                    video_url: "https://youtu.be/SR5NYCdzKkc?si=mHhHkg4U09Vz7Cgr",
+                    video_url: "https://youtu.be/kAOuj6o7Kxs?si=BuymY_a2R1S8WyqX",
                     duration: 3600, // 60 minutes
                     order: 5,
                     created_at: new Date().toISOString(),

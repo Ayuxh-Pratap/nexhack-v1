@@ -65,8 +65,13 @@ export function ChatPage({ chatId }: ChatPageProps) {
     // For now, use first course by default
     const selectedCourse = courses[0];
     
-    // Get lecture_id from course if available (for course-related chats)
-    const lectureId = selectedCourse?.lectures?.[0]?.id || null;
+    // Get lecture_id from URL params or course (for course-related chats)
+    const lectureIdFromUrl = searchParams.get('lecture_id');
+    const lectureId = lectureIdFromUrl || selectedCourse?.lectures?.[0]?.id || null;
+    
+    // Find the lecture and get its video_url
+    const selectedLecture = selectedCourse?.lectures?.find(l => l.id === lectureId);
+    const lectureVideoUrl = selectedLecture?.video_url || null;
 
     // Use chat stream hook
     const aiMessageIdRef = useRef<string | null>(null);
@@ -260,8 +265,8 @@ export function ChatPage({ chatId }: ChatPageProps) {
             }
 
             // Start streaming chat response using SSE
-            // Pass chatId and useNodeBasedPrompting when node mode is enabled
-            await streamChat(content, lectureId, chatId, isNodeMode);
+            // Send query and video_url if lecture is available
+            await streamChat(content, lectureVideoUrl);
         } catch (error) {
             console.error("Failed to send message:", error);
             // Fallback error message

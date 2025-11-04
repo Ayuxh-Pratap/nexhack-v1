@@ -56,7 +56,7 @@ export const signInWithGoogle = createAsyncThunk(
                             device_data: deviceData,
                         },
                     })
-                ).unwrap();
+            ).unwrap();
             } catch (apiError: any) {
                 // Log the error for debugging
                 console.error("Backend authentication error:", apiError);
@@ -143,7 +143,7 @@ export const signUpWithEmail = createAsyncThunk(
                             device_data: deviceData,
                         },
                     })
-                ).unwrap();
+            ).unwrap();
             } catch (apiError: any) {
                 // Log the error for debugging
                 console.error("Backend authentication error:", apiError);
@@ -224,7 +224,7 @@ export const signInWithEmail = createAsyncThunk(
                             device_data: deviceData,
                         },
                     })
-                ).unwrap();
+            ).unwrap();
             } catch (apiError: any) {
                 // Log the error for debugging
                 console.error("Backend authentication error:", apiError);
@@ -308,7 +308,7 @@ export const checkAuthState = createAsyncThunk(
             // Use onAuthStateChanged to listen for auth state changes
             const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
                 try {
-                    if (firebaseUser) {
+                        if (firebaseUser) {
                         const firebaseToken = await firebaseUser.getIdToken();
                         // Get role from custom claims or default to user
                         const tokenResult = await firebaseUser.getIdTokenResult();
@@ -355,17 +355,17 @@ export const checkAuthState = createAsyncThunk(
                                             device_data: deviceData,
                                         },
                                     })
-                                ).unwrap();
+                            ).unwrap();
 
                                 if (!authResult || !authResult.access_token) {
                                     throw new Error("Backend authentication failed: No access token received");
                                 }
 
                                 const newBackendToken = authResult.access_token;
-                                tokenService.setTokens(firebaseToken, newBackendToken);
-                                dispatch(setBackendToken(newBackendToken));
-                                dispatch(setUser(user));
-                                dispatch(setFirebaseToken(firebaseToken));
+                            tokenService.setTokens(firebaseToken, newBackendToken);
+                            dispatch(setBackendToken(newBackendToken));
+                            dispatch(setUser(user));
+                            dispatch(setFirebaseToken(firebaseToken));
                                 dispatch(setLoading(false));
                                 unsubscribe();
                                 resolve({ user, firebaseToken });
@@ -378,7 +378,7 @@ export const checkAuthState = createAsyncThunk(
                                 dispatch(setBackendToken(null));
                                 dispatch(setLoading(false));
                                 unsubscribe();
-                                resolve({ user, firebaseToken });
+                        resolve({ user, firebaseToken });
                             }
                         }
                     } else {

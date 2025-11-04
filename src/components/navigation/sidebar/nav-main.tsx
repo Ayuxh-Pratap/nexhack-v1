@@ -116,14 +116,14 @@ export function NavMain({
 
     return (
         <>
-            <SidebarGroup>
-                <NewChatButton />
+        <SidebarGroup>
+            <NewChatButton />
             </SidebarGroup>
             
             {/* Courses Section */}
             <SidebarGroup>
                 <SidebarGroupLabel>My Courses</SidebarGroupLabel>
-                <SidebarMenu>
+            <SidebarMenu>
                     {dummyCourses.map((course) => (
                         <SidebarMenuItem key={course.id}>
                             <SidebarMenuButton 
@@ -153,14 +153,14 @@ export function NavMain({
                 <SidebarMenu>
                     {dummyChats.map((chat) => (
                         <SidebarMenuItem key={chat.id}>
-                            <SidebarMenuSubButton
-                                asChild
+                                                        <SidebarMenuSubButton
+                                                            asChild
                                 className={`group relative w-full ${currentChatId === chat.id ? "bg-muted" : ""}`}
-                            >
+                                                        >
                                 <Link
-                                    href={chat.url}
-                                    className="flex items-center justify-between w-full pr-2"
-                                >
+                                                                href={chat.url}
+                                                                className="flex items-center justify-between w-full pr-2"
+                                                            >
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
                                         <span className="truncate text-sm">{chat.title}</span>
@@ -168,29 +168,29 @@ export function NavMain({
                                             <Pin className="h-3 w-3 shrink-0 text-muted-foreground" />
                                         )}
                                     </div>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                             <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-muted rounded-md min-w-[24px] h-6 flex items-center justify-center ring-0 focus:ring-0 focus:outline-none cursor-pointer">
-                                                <MoreVertical className="h-3.5 w-3.5" />
-                                            </button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-48">
-                                            <DropdownMenuItem onClick={() => handleChatAction('pin', chat.id)}>
-                                                <Pin className="h-4 w-4 mr-3" />
-                                                <span className="flex-1">{chat.isPinned ? 'Unpin' : 'Pin'}</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleChatAction('archive', chat.id)}>
-                                                <Archive className="h-4 w-4 mr-3" />
-                                                <span className="flex-1">Archive</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleChatAction('delete', chat.id)} className="text-destructive">
-                                                <Trash2 className="h-4 w-4 mr-3" />
-                                                <span className="flex-1">Delete</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                                                            <MoreVertical className="h-3.5 w-3.5" />
+                                                                        </button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end" className="w-48">
+                                                                        <DropdownMenuItem onClick={() => handleChatAction('pin', chat.id)}>
+                                                                            <Pin className="h-4 w-4 mr-3" />
+                                                                            <span className="flex-1">{chat.isPinned ? 'Unpin' : 'Pin'}</span>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem onClick={() => handleChatAction('archive', chat.id)}>
+                                                                            <Archive className="h-4 w-4 mr-3" />
+                                                                            <span className="flex-1">Archive</span>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem onClick={() => handleChatAction('delete', chat.id)} className="text-destructive">
+                                                                            <Trash2 className="h-4 w-4 mr-3" />
+                                                                            <span className="flex-1">Delete</span>
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
                                 </Link>
-                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubButton>
                         </SidebarMenuItem>
                     ))}
                 </SidebarMenu>
@@ -211,33 +211,33 @@ export function NavMain({
                                         </Link>
                                     </SidebarMenuButton>
                                     {item.items?.length ? (
-                                        <>
-                                            <CollapsibleTrigger asChild>
-                                                <SidebarMenuAction className="data-[state=open]:rotate-90">
-                                                    <ChevronRight />
-                                                    <span className="sr-only">Toggle</span>
-                                                </SidebarMenuAction>
-                                            </CollapsibleTrigger>
-                                            <CollapsibleContent>
-                                                <SidebarMenuSub>
-                                                    {item.items?.map((subItem) => (
-                                                        <SidebarMenuSubItem key={subItem.title}>
-                                                            <SidebarMenuSubButton asChild>
+                                <>
+                                    <CollapsibleTrigger asChild>
+                                        <SidebarMenuAction className="data-[state=open]:rotate-90">
+                                            <ChevronRight />
+                                            <span className="sr-only">Toggle</span>
+                                        </SidebarMenuAction>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent>
+                                        <SidebarMenuSub>
+                                            {item.items?.map((subItem) => (
+                                                <SidebarMenuSubItem key={subItem.title}>
+                                                    <SidebarMenuSubButton asChild>
                                                                 <Link href={subItem.url}>
-                                                                    <span>{subItem.title}</span>
+                                                            <span>{subItem.title}</span>
                                                                 </Link>
-                                                            </SidebarMenuSubButton>
-                                                        </SidebarMenuSubItem>
-                                                    ))}
-                                                </SidebarMenuSub>
-                                            </CollapsibleContent>
-                                        </>
-                                    ) : null}
-                                </SidebarMenuItem>
-                            </Collapsible>
-                        ))}
-                    </SidebarMenu>
-                </SidebarGroup>
+                                                    </SidebarMenuSubButton>
+                                                </SidebarMenuSubItem>
+                                            ))}
+                                        </SidebarMenuSub>
+                                    </CollapsibleContent>
+                                </>
+                            ) : null}
+                        </SidebarMenuItem>
+                    </Collapsible>
+                ))}
+            </SidebarMenu>
+        </SidebarGroup>
             )}
         </>
     )

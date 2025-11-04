@@ -148,7 +148,7 @@ const ChatMessage = ({ index, message, messages, isLoading, onSignWord }: Props)
                   ),
                 }}
               >
-                {message.content}
+              {message.content}
               </ReactMarkdown>
             </div>
           )}
